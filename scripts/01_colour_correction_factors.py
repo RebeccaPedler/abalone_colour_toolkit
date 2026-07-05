@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Script 06b: Generate per-image colour correction factors from ColorChecker cards
+Script 01: Generate per-image colour correction factors from ColorChecker cards
 =================================================================================
-Processes a folder of JPG images, detects the ColorChecker Classic card in each,
-and outputs a CSV of correction factors (slope + intercept per Lab channel).
+This script will proccess a folder of JPG images, detect the ColorChecker card,
+and generate a CSV of correction factors for each CIELAB channel (L, a*, b*)
 
-You then apply these to your data separately in R or Excel using:
+The correction factors can be separately applied to extracted colour data using the following:
     L_corrected = L_slope * L_raw + L_intercept
     a_corrected = a_slope * a_raw + a_intercept
     b_corrected = b_slope * b_raw + b_intercept
@@ -13,7 +13,7 @@ You then apply these to your data separately in R or Excel using:
 Usage:
     python colour_correction_factors.py --images /path/to/jpgs --output correction_factors.csv
 
-Requirements:
+Install the required packages if not already:
     pip install colour-science colour-checker-detection opencv-python numpy pandas
 """
 
@@ -26,38 +26,18 @@ import argparse
 from pathlib import Path
 from numpy.linalg import lstsq
 
-
-# =============================================================================
 # CONFIGURATION
-# =============================================================================
-CHECKER_REFERENCE = "ColorChecker24 - After November 2014"
+CHECKER_REFERENCE = "ColorChecker24 - After November 2014" # Change this if using a a different colour card
 IMAGE_EXTENSIONS  = [".jpg", ".JPG", ".jpeg", ".JPEG", ".tif", ".TIF"]
 
-# Exclude patches below this detected L* — these are clipped/underexposed
-# and give unreliable correction estimates
+# Exclude ColourChecker patches below this detected L* for calibration  
+# These are clipped/underexposed and give unreliable correction estimates
 MIN_L_DETECTED = 8
 MIN_L_REF      = 20
-MIN_PATCHES    = 10   # minimum usable patches; skip image if fewer found
+MIN_PATCHES    = 10   # minimum number of patches that must be detected for calibration to continue
+MAX_DE_AFTER   = 10   # eclude any images where the delta E is greater than 10
 
-# dE above this after correction means the fit itself failed (bad patch
-# detection, wrong grid orientation, glare, motion blur) rather than
-# ordinary camera/lighting noise. Anything above this is "poor" regardless
-# of R^2, and should be excluded from correction application downstream,
-# not just flagged.
-MAX_DE_AFTER   = 10
-
-
-# =============================================================================
-# BUILD REFERENCE Lab VALUES (the "ground truth" the card should match)
-# =============================================================================
-# sRGB's native reference white is D65, and colour.sRGB_to_XYZ() always
-# returns XYZ expressed under D65 regardless of what illuminant the pixels
-# started under. Lab must be computed against that same D65 white, or the
-# result isn't standard Lab under either illuminant. This used to pass D50
-# here, which silently produced non-standard Lab (see chat for the size of
-# that error — mean +11 units on b*, up to +18, with a* and L* barely
-# touched). colour.XYZ_to_Lab()'s default illuminant is already D65, so
-# leaving the argument out (rather than hardcoding it) is the safest fix.
+# BUILD REFERENCE Lab VALUES FROM COLOUR CHECKER
 def build_reference_lab():
     cc_ref = colour.CCS_COLOURCHECKERS[CHECKER_REFERENCE]
     ref_lab = []
@@ -67,20 +47,16 @@ def build_reference_lab():
         ref_lab.append(colour.XYZ_to_Lab(colour.sRGB_to_XYZ(rgb)))
     return np.array(ref_lab)
 
-
-# =============================================================================
 # CONVERT DETECTED sRGB PATCHES TO Lab
-# =============================================================================
 def srgb_to_lab(srgb_array):
     return np.array([
         colour.XYZ_to_Lab(colour.sRGB_to_XYZ(np.clip(rgb, 0, 1)))
         for rgb in srgb_array
     ])
 
+# DETECT COLOUR CHECKER 
+# The script will try all four possible rotations of the image to detect the colour checker. 
 
-# =============================================================================
-# DETECT CHECKER — tries all 4 rotations
-# =============================================================================
 def detect_patches(img_bgr):
     rotations = [
         ("0°",     img_bgr),
@@ -99,10 +75,8 @@ def detect_patches(img_bgr):
             continue
     return None, "failed"
 
-
-# =============================================================================
-# FIT CORRECTION — tries all 8 grid orientations, returns best
-# =============================================================================
+# FIT CORRECTION 
+# Script will continue with the rotation that produces the best fit
 def fit_correction(detected_lab, ref_lab):
     g46 = detected_lab.reshape(4, 6, 3)
     g64 = detected_lab.reshape(6, 4, 3)
@@ -151,10 +125,7 @@ def fit_correction(detected_lab, ref_lab):
 
     return best
 
-
-# =============================================================================
 # MAIN
-# =============================================================================
 def main():
     parser = argparse.ArgumentParser(
         description="Generate per-image colour correction factors from ColorChecker cards"
