@@ -1,22 +1,15 @@
 #!/usr/bin/env python3
 """
-extract_lip_colour.py
-----------------------
-Run immediately after segment_lips.py. Takes the white-background lip cutouts
-in <root>/segmented/, applies the same HSB colour-threshold used in
-Whole_Color_Macro_All_components_FINAL_components.ijm to exclude background
+Script 03: Generate per-image colour correction factors from ColorChecker cards
+=================================================================================
+Run immediately after segment_lips.py. This script takes the white-background lip cutouts
+in <root>/segmented/, applies a HSB colour-threshold to exclude background
 and over/under-exposed pixels, then extracts mean RGB, HSB and CIELAB values
 over the remaining pixels.
 
-Nothing under --root/segmented or --out/polygons is touched or overwritten.
-Note: unlike the Macro, this script does NOT save over the input image — the
-Macro's "Clear Outside" + saveAs step overwrote the file it had just opened,
-which isn't repeated here on purpose.
-
-Outputs (all new, written under --root):
+Outputs (written under --root):
   * <root>/Whole_Color_Measurements_pivoted.xlsx
-        Sheet 'colour_data'    - same column layout as the Macro's pivoted
-                                  CSV: image_ID, mean red, green, blue, hue,
+        Sheet 'colour_data'    - CSV containing image_ID, mean red, green, blue, hue,
                                   saturation, brightness, lightness, a, b
         Sheet 'extraction_log' - per-image status (ok / no_pixels_after_threshold
                                   / unreadable), for QC
@@ -24,21 +17,6 @@ Outputs (all new, written under --root):
         QC image: green tint = pixels used for the colour means, red tint =
         lip pixels excluded by the threshold (too bright/dark/grey), white
         background left as-is.
-
-Threshold boundaries are copied from the Macro (see THRESHOLD below) — change
-them there if you recalibrate.
-
-IMPORTANT — Lab conversion pipeline:
-CIELAB here is computed with the same sRGB(D65)->XYZ->Lab(D65) pipeline as
-the corrected colour_correction_factors.py, NOT ImageJ's native Lab Stack.
-This is deliberate, not an oversight: uncorrected_L/a/b must be computed the
-same way the correction factors were fitted for collate_colour_data.py's
-slope/intercept correction to be numerically valid. As of the D65 fix, this
-pipeline now produces standard CIE Lab, so it also happens to match what a
-correct ImageJ Lab Stack conversion would give you (small residual
-differences are just implementation/rounding, not a white-point mismatch).
-RGB and HSB have no equivalent white-point ambiguity, so they're computed
-with the standard formula (same maths ImageJ's HSB Stack uses).
 
 Usage:
     python extract_lip_colour.py --root "C:\\Users\\RebeccaPedler\\Documents\\lip_cutouts_test"
@@ -56,14 +34,7 @@ import pandas as pd
 import colour
 from matplotlib.colors import rgb_to_hsv
 
-# =============================================================================
-# THRESHOLD BOUNDARIES — copied from
-# Whole_Color_Macro_All_components_FINAL_components.ijm (lines ~57-65).
-# Channel order matches the Macro: Hue, Saturation, Brightness, all on the
-# 0-255 scale ImageJ's "HSB Stack" uses. filter="pass" keeps values inside
-# [min, max]. The Macro also supports filter="stop" (invert) but doesn't use
-# it for this image set, so inversion isn't implemented here.
-# =============================================================================
+# SET THRESHOLD BOUNDARIES
 THRESHOLD = {
     "hue":        {"min": 25, "max": 255},
     "saturation": {"min": 0,  "max": 255},
@@ -79,8 +50,6 @@ COLOUR_DATA_COLUMNS = [
 
 
 def image_id_from_cutout(path: Path) -> str:
-    """IMG_2076_lip.jpg -> IMG_2076, so this lines up with the image_id/stem
-    used in correction_factors.csv and segment_lips.py's summary.csv."""
     stem = path.stem
     if stem.lower().endswith(LIP_SUFFIX):
         stem = stem[: -len(LIP_SUFFIX)]
@@ -88,9 +57,6 @@ def image_id_from_cutout(path: Path) -> str:
 
 
 def rgb_to_lab(rgb_pixels):
-    """rgb_pixels: (N, 3) array, values in [0, 1]. Returns (N, 3) Lab array
-    (standard sRGB->XYZ->Lab, D65 throughout — matches colour_correction_factors.py's
-    srgb_to_lab())."""
     XYZ = colour.sRGB_to_XYZ(np.clip(rgb_pixels, 0, 1))
     return colour.XYZ_to_Lab(XYZ)
 
@@ -139,12 +105,7 @@ def threshold_and_measure(bgr):
     }
     return means, mask, "ok"
 
-
 def save_threshold_qc(bgr, mask, out_path: Path):
-    """Green = pixels used for the colour means. Red = pixels that are part
-    of the lip cutout (i.e. not white background) but got excluded by the
-    threshold. White background is left untouched, same visual language as
-    segment_lips.py's overlay (green = kept)."""
     lip_region = ~np.all(bgr >= 250, axis=-1)  # near-white = background
     excluded_in_lip = lip_region & ~mask
 
@@ -212,6 +173,7 @@ def main():
         colour_df.to_excel(writer, sheet_name="colour_data", index=False)
         log_df.to_excel(writer, sheet_name="extraction_log", index=False)
 
+    # Print summary
     print(f"\n{'='*50}")
     print(f"DONE — {len(cutouts)} cutout(s) processed")
     print(f"  ok:                        {n_ok}")
