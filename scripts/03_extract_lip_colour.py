@@ -19,7 +19,7 @@ Outputs (written under --root):
         background left as-is.
 
 Usage:
-    python extract_lip_colour.py --root "C:\\Users\\RebeccaPedler\\Documents\\lip_cutouts_test"
+    python extract_lip_colour.py --root "path\to\segmented"
 
 Requirements:
     pip install opencv-python numpy pandas openpyxl matplotlib colour-science
