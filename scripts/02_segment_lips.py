@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 """
-segment_lips.py
----------------
-Run your trained lip model over a folder of abalone photos (searching all
-subfolders), and for each image save:
-  * <name>_lip.png      - the lip on a white background (your cutout style),
-  * <name>_overlay.jpg  - the original with the detected lip tinted, for QC,
+Script 02: Segment out the lip from images of abalone
+=================================================================================
+This YOLO model will scan a folder of abalone photos, including searching all
+subfolders, and for each image save:
+  * <name>_lip.png      - the lip on a white background ,
+  * <name>_overlay.jpg  - the original image with the detected lip coloured green for QC ,
 and a summary.csv listing every image, whether a lip was found, and its size.
 
 Handles CR3 raw files (needs `pip install rawpy`) and JPEG/PNG.
 
-Pilot on 200 images spread across your subfolders:
-    python segment_lips.py ^
-        --weights "C:\\Users\\RebeccaPedler\\Documents\\lip_model\\runs\\lip_seg\\weights\\best.pt" ^
-        --source  "D:\\AbalonePhotos" ^
-        --out     "C:\\Users\\RebeccaPedler\\Documents\\lip_cutouts_test" ^
+Usage:
+    python segment_lips.py --weights "path\to\weights\best.pt" --source "path\to\your\images" --out "path\to\your\output\folder" 
+    
+Add this to the run if you wish to pilot on 200 images spread across your subfolders:
         --limit 200
 
-Drop --limit to process everything.
+Dependancies:
+   Save the weights folder from this repo (INSERT PATH HERE) into your directory containing images
+
+Install the required packages if not already:
+    pip install numpy opencv-python
+
 """
 
 import argparse
@@ -28,9 +32,9 @@ from pathlib import Path
 import numpy as np
 import cv2
 
-IMG_EXT = {".jpg", ".jpeg", ".png"}
-RAW_EXT = {".cr3", ".cr2", ".nef", ".arw", ".dng"}
-SKIP_SUFFIX = ("_lip", "_overlay", "copy")     # don't re-process our own outputs
+IMG_EXT = {".jpg", ".jpeg", ".png"}  # for proccessing JPEGS
+RAW_EXT = {".cr3", ".cr2", ".nef", ".arw", ".dng"}  # for proccessing RAW imagery
+SKIP_SUFFIX = ("_lip", "_overlay", "copy")     # this prevents the script from reproccessing generated images
 
 
 def load_image(path: Path):
@@ -90,7 +94,7 @@ def main():
     if not images:
         print(f"No images found under {source}")
         return
-    random.Random(args.seed).shuffle(images)        # spread the sample around
+    random.Random(args.seed).shuffle(images)        # spreads the sample around e.g., randomly proccesses images
     if args.limit:
         images = images[:args.limit]
     print(f"Processing {len(images)} image(s)...\n")
