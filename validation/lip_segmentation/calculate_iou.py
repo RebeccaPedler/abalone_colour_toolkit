@@ -1,148 +1,150 @@
 """
-Calculate IoU between manually segmented and Python-segmented abalone lip images.
+calculate_iou.py
+----------------
+Compares manually segmented abalone lip images (segmented in Photoshop) against Python-segmented
+versions by calculating Intersection over Union (IoU) for each matched pair.
+
+Folder structure expected:
+    root_dir/
+        manual/       PNG files, RGBA, transparent background, no suffix
+        python/       PNG files, RGB, white background, filename ends in _lip
 
 Usage:
-    python calculate_iou.py /path/to/folder /path/to/output.csv
+python calculate_iou.py --root "path\to\root" --manual_dir "path\to\manually\segmented\images" --python_dir "path\to\python\segmented\images"
+
 """
 
+import argparse
+import csv
 import sys
 from pathlib import Path
+
 import numpy as np
 from PIL import Image
-import csv
-
-ALPHA_THRESHOLD = 127
-WHITE_DIST_THRESHOLD = 10
-LIP_SUFFIX = "_lip"
 
 
-def manual_mask(path: Path) -> np.ndarray:
-    """Foreground = alpha > threshold."""
-    img = Image.open(path).convert("RGBA")
-    arr = np.array(img)
-    if arr.shape[2] < 4:
-        raise ValueError(f"{path.name}: expected an alpha channel, none found")
-    return arr[:, :, 3] > ALPHA_THRESHOLD
+def make_mask_manual(path: Path, alpha_thresh: int = 127) -> np.ndarray:
+    """Binary mask from RGBA image: foreground = alpha > alpha_thresh."""
+    img = Image.open(path)
+    if img.mode != "RGBA":
+        img = img.convert("RGBA")
+    alpha = np.array(img)[:, :, 3]
+    return alpha > alpha_thresh
 
 
-def python_mask(path: Path) -> np.ndarray:
-    """Foreground = pixel colour sufficiently different from pure white."""
-    img = Image.open(path).convert("RGB")
-    arr = np.array(img).astype(int)
-    dist = np.sqrt(((arr - 255) ** 2).sum(axis=2))
-    return dist > WHITE_DIST_THRESHOLD
+def make_mask_python(path: Path, white_thresh: float = 10.0) -> np.ndarray:
+    """Binary mask from RGB image: foreground = distance from pure white > white_thresh."""
+    img = Image.open(path)
+    if img.mode != "RGB":
+        img = img.convert("RGB")
+    arr = np.array(img).astype(np.float32)
+    dist = np.sqrt(((arr - 255.0) ** 2).sum(axis=2))
+    return dist > white_thresh
 
 
-def compute_iou(manual_mask: np.ndarray, python_mask: np.ndarray) -> dict:
-    """
-    Manual mask is treated as ground truth.
-    Precision = of pixels Python called lip, fraction that manual agrees are lip.
-    Recall = of pixels manual called lip, fraction that Python also caught.
-    """
-    if manual_mask.shape != python_mask.shape:
-        raise ValueError(f"Shape mismatch: {manual_mask.shape} vs {python_mask.shape}")
-
-    intersection = np.logical_and(manual_mask, python_mask).sum()
-    union = np.logical_or(manual_mask, python_mask).sum()
-    manual_area = manual_mask.sum()
-    python_area = python_mask.sum()
-
-    iou = intersection / union if union > 0 else float("nan")
-    dice = (2 * intersection) / (manual_area + python_area) if (manual_area + python_area) > 0 else float("nan")
-    precision = intersection / python_area if python_area > 0 else float("nan")
-    recall = intersection / manual_area if manual_area > 0 else float("nan")
-
+def compute_iou(mask_a: np.ndarray, mask_b: np.ndarray) -> dict:
+    """Return IoU and component counts for two boolean masks of the same shape."""
+    if mask_a.shape != mask_b.shape:
+        raise ValueError(
+            f"Mask shapes do not match: {mask_a.shape} vs {mask_b.shape}"
+        )
+    intersection = np.logical_and(mask_a, mask_b).sum()
+    union = np.logical_or(mask_a, mask_b).sum()
+    iou = float(intersection) / float(union) if union > 0 else float("nan")
     return {
+        "pixels_manual": int(mask_a.sum()),
+        "pixels_python": int(mask_b.sum()),
+        "intersection": int(intersection),
+        "union": int(union),
         "iou": iou,
-        "dice": dice,
-        "precision": precision,
-        "recall": recall,
-        "intersection_px": int(intersection),
-        "union_px": int(union),
-        "manual_area_px": int(manual_area),
-        "python_area_px": int(python_area),
     }
 
 
-def find_pairs(folder: Path):
-    """
-    Match manual files (no suffix) to Python files (_lip suffix) by base filename.
-    Returns list of (base_name, manual_path, python_path).
-    Reports any unmatched files rather than silently skipping them.
-    """
-    all_pngs = sorted(folder.glob("*.png"))
-    lip_files = {p.stem[: -len(LIP_SUFFIX)]: p for p in all_pngs if p.stem.endswith(LIP_SUFFIX)}
-    manual_files = {p.stem: p for p in all_pngs if not p.stem.endswith(LIP_SUFFIX)}
+def main():
+    parser = argparse.ArgumentParser(description="Calculate IoU for lip segmentation pairs.")
+    parser.add_argument("--root",         required=True, help="Path to parent folder containing the two subfolders.")
+    parser.add_argument("--manual_dir",   default="manual", help="Name of the manual segmentation subfolder (default: manual).")
+    parser.add_argument("--python_dir",   default="python",  help="Name of the Python segmentation subfolder (default: python).")
+    parser.add_argument("--alpha_thresh", type=int,   default=127,  help="Alpha threshold for manual mask (default: 127).")
+    parser.add_argument("--white_thresh", type=float, default=10.0, help="Distance-from-white threshold for Python mask (default: 10).")
+    parser.add_argument("--output",       default="iou_results.csv", help="Output CSV filename (default: iou_results.csv).")
+    args = parser.parse_args()
 
-    pairs = []
-    for base, manual_path in manual_files.items():
-        if base in lip_files:
-            pairs.append((base, manual_path, lip_files[base]))
+    root       = Path(args.root)
+    manual_dir = root / args.manual_dir
+    python_dir = root / args.python_dir
 
-    unmatched_manual = sorted(set(manual_files) - set(lip_files))
-    unmatched_lip = sorted(set(lip_files) - set(manual_files))
+    for d in (manual_dir, python_dir):
+        if not d.is_dir():
+            sys.exit(f"ERROR: Directory not found: {d}")
 
-    return pairs, unmatched_manual, unmatched_lip
+    # Build lookup: stem -> path for Python files (strip _lip suffix)
+    python_files = {
+        p.stem.removesuffix("_lip"): p
+        for p in sorted(python_dir.glob("*.png"))
+    }
 
+    manual_files = sorted(manual_dir.glob("*.png"))
 
-def main(folder_str: str, output_csv: str):
-    folder = Path(folder_str)
-    pairs, unmatched_manual, unmatched_lip = find_pairs(folder)
-
-    if unmatched_manual:
-        print(f"WARNING: {len(unmatched_manual)} manual file(s) with no matching _lip file:")
-        for name in unmatched_manual:
-            print(f"  - {name}.png")
-    if unmatched_lip:
-        print(f"WARNING: {len(unmatched_lip)} _lip file(s) with no matching manual file:")
-        for name in unmatched_lip:
-            print(f"  - {name}{LIP_SUFFIX}.png")
-
-    print(f"\nMatched {len(pairs)} pair(s). Calculating IoU...\n")
+    if not manual_files:
+        sys.exit(f"ERROR: No PNG files found in {manual_dir}")
 
     results = []
-    for base, manual_path, python_path in pairs:
+    unmatched = []
+
+    for manual_path in manual_files:
+        stem = manual_path.stem  # e.g. IMG_1803
+        if stem not in python_files:
+            unmatched.append(manual_path.name)
+            continue
+
+        python_path = python_files[stem]
+
         try:
-            m_mask = manual_mask(manual_path)
-            p_mask = python_mask(python_path)
-            stats = compute_iou(m_mask, p_mask)
-            stats["base_name"] = base
-            results.append(stats)
-            print(f"{base}: IoU={stats['iou']:.4f}  Dice={stats['dice']:.4f}  "
-                  f"Precision={stats['precision']:.4f}  Recall={stats['recall']:.4f}")
+            mask_m = make_mask_manual(manual_path, args.alpha_thresh)
+            mask_p = make_mask_python(python_path, args.white_thresh)
+            metrics = compute_iou(mask_m, mask_p)
         except Exception as e:
-            print(f"ERROR processing {base}: {e}")
+            print(f"  WARNING: Could not process {stem}: {e}")
+            results.append({
+                "filename": stem,
+                "pixels_manual": "ERROR",
+                "pixels_python": "ERROR",
+                "intersection": "ERROR",
+                "union": "ERROR",
+                "iou": "ERROR",
+            })
+            continue
 
-    if not results:
-        print("No results to write.")
-        return
+        results.append({"filename": stem, **metrics})
+        print(f"  {stem:40s}  IoU = {metrics['iou']:.4f}  "
+              f"(manual {metrics['pixels_manual']:,} px, python {metrics['pixels_python']:,} px)")
 
-    ious = [r["iou"] for r in results]
-    dices = [r["dice"] for r in results]
-    precisions = [r["precision"] for r in results]
-    recalls = [r["recall"] for r in results]
-
-    print(f"\n{'Metric':<12}{'Mean':>8}{'Median':>8}{'Min':>8}{'Max':>8}{'Std':>8}")
-    for name, vals in [("IoU", ious), ("Dice", dices), ("Precision", precisions), ("Recall", recalls)]:
-        print(f"{name:<12}{np.mean(vals):>8.4f}{np.median(vals):>8.4f}{np.min(vals):>8.4f}{np.max(vals):>8.4f}{np.std(vals):>8.4f}")
-
-    with open(output_csv, "w", newline="") as f:
-        writer = csv.DictWriter(
-            f,
-            fieldnames=[
-                "base_name", "iou", "dice", "precision", "recall",
-                "intersection_px", "union_px", "manual_area_px", "python_area_px",
-            ],
-        )
+    # Write CSV
+    out_path = root / args.output
+    fieldnames = ["filename", "pixels_manual", "pixels_python", "intersection", "union", "iou"]
+    with open(out_path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
-        for r in results:
-            writer.writerow(r)
+        writer.writerows(results)
 
-    print(f"\nResults written to {output_csv}")
+    # Summary
+    valid_ious = [r["iou"] for r in results if isinstance(r["iou"], float) and not np.isnan(r["iou"])]
+    print()
+    print("=" * 60)
+    print(f"Pairs processed:   {len(results)}")
+    print(f"Unmatched manual:  {len(unmatched)}")
+    if unmatched:
+        for name in unmatched:
+            print(f"   {name}")
+    if valid_ious:
+        print(f"Mean IoU:          {np.mean(valid_ious):.4f}")
+        print(f"Median IoU:        {np.median(valid_ious):.4f}")
+        print(f"Min IoU:           {np.min(valid_ious):.4f}")
+        print(f"Max IoU:           {np.max(valid_ious):.4f}")
+    print(f"Results saved to:  {out_path}")
+    print("=" * 60)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python calculate_iou.py /path/to/folder /path/to/output.csv")
-        sys.exit(1)
-    main(sys.argv[1], sys.argv[2])
+    main()
