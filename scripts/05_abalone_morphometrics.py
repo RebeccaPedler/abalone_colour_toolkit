@@ -19,22 +19,21 @@ import os
 import sys
 import warnings
 from pathlib import Path
-
+ 
 import cv2
 import numpy as np
-
+ 
 # Constants
-RULER_REAL_MM        = 123
 MIN_DIVIDER_FRAC     = 0.01   # divider strip width/height as a fraction of
 MAX_DIVIDER_FRAC     = 0.12   # the image's relevant dimension (generous bounds)
 DIVIDER_DARK_THRESH  = 0.4    # fraction of a row/col that must be "dark" pixels
-
+ 
 # Plausible length range for greenlip abalone (mm). Change this according to your population
 LENGTH_MIN_MM = 60
 LENGTH_MAX_MM = 130
-
+ 
 # DIVIDER DETECTION  (orientation + position, auto-detected)
-
+ 
 def _find_contiguous_runs(bool_1d):
     """Return list of (start, end_inclusive, length) for contiguous True runs."""
     runs = []
@@ -49,13 +48,13 @@ def _find_contiguous_runs(bool_1d):
     if in_run:
         runs.append((start, len(bool_1d) - 1, len(bool_1d) - start))
     return runs
-
-
+ 
+ 
 def detect_divider(img_bgr):
     h, w = img_bgr.shape[:2]
     gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
     _, dark = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY_INV)
-
+ 
     # Vertical strip check (scan columns)
     col_frac   = dark.sum(axis=0).astype(float) / (255.0 * h)
     col_smooth = np.convolve(col_frac, np.ones(31) / 31, mode='same')
@@ -63,7 +62,7 @@ def detect_divider(img_bgr):
     v_runs     = [r for r in v_runs
                   if MIN_DIVIDER_FRAC * w <= r[2] <= MAX_DIVIDER_FRAC * w]
     best_v     = max(v_runs, key=lambda r: r[2]) if v_runs else None
-
+ 
     # Horizontal strip check (scan rows)
     row_frac   = dark.sum(axis=1).astype(float) / (255.0 * w)
     row_smooth = np.convolve(row_frac, np.ones(31) / 31, mode='same')
@@ -71,7 +70,7 @@ def detect_divider(img_bgr):
     h_runs     = [r for r in h_runs
                   if MIN_DIVIDER_FRAC * h <= r[2] <= MAX_DIVIDER_FRAC * h]
     best_h     = max(h_runs, key=lambda r: r[2]) if h_runs else None
-
+ 
     # Prefer whichever axis actually found a valid, well-sized run.
     if best_v and not best_h:
         return {"orientation": "vertical", "start": best_v[0], "end": best_v[1]}
@@ -81,18 +80,18 @@ def detect_divider(img_bgr):
         if best_v[2] >= best_h[2]:
             return {"orientation": "vertical", "start": best_v[0], "end": best_v[1]}
         return {"orientation": "horizontal", "start": best_h[0], "end": best_h[1]}
-
+ 
     # Fallback: nothing detected confidently — assume vertical at midpoint
     return {"orientation": "vertical", "start": w // 2 - 1, "end": w // 2}
-
-
+ 
+ 
 # 1b.  CARD-SIDE DETECTION  (auto-detect which region holds the ColorChecker)
 def _quick_patch_count(region_bgr):
     if region_bgr is None or region_bgr.size == 0:
         return 0
     hsv = cv2.cvtColor(region_bgr, cv2.COLOR_BGR2HSV)
     H, S, V = hsv[:, :, 0].astype(float), hsv[:, :, 1].astype(float), hsv[:, :, 2].astype(float)
-
+ 
     bands = {
         "yellow":  (H >= 20)  & (H <= 35)  & (S > 150) & (V > 80),
         "cyan":    (H >= 85)  & (H <= 100) & (S > 150) & (V > 80),
@@ -103,7 +102,7 @@ def _quick_patch_count(region_bgr):
     k_close = np.ones((8, 8), np.uint8)
     k_open  = np.ones((4, 4), np.uint8)
     MIN_PX, MAX_PX = 50, 600
-
+ 
     count = 0
     for band in bands.values():
         mask = band.astype(np.uint8) * 255
@@ -120,21 +119,21 @@ def _quick_patch_count(region_bgr):
                 continue
             count += 1
     return count
-
-
+ 
+ 
 def detect_layout(img_bgr, divider):
     h, w = img_bgr.shape[:2]
     MARGIN = 80  # px buffer to clear the divider strip itself
-
+ 
     if divider["orientation"] == "vertical":
         # Layout A: side-by-side. Card is in whichever half has more patches.
         mid = (divider["start"] + divider["end"]) // 2
         left_box  = (0, 0, mid, h)
         right_box = (mid, 0, w, h)
-
+ 
         left_count  = _quick_patch_count(img_bgr[0:h, 0:mid])
         right_count = _quick_patch_count(img_bgr[0:h, mid:w])
-
+ 
         if left_count >= right_count:
             card_box, abalone_box = left_box, right_box
         else:
@@ -145,27 +144,27 @@ def detect_layout(img_bgr, divider):
         else:
             ax0 = min(ax0 + MARGIN, ax1 - 1)
         abalone_box = (ax0, ay0, ax1, ay1)
-
+ 
         return {"type": "side_by_side", "card_box": card_box, "abalone_box": abalone_box}
-
+ 
     else:
         below_y0 = min(divider["end"] + MARGIN, h - 1)
         below_box = (0, below_y0, w, h)
       
         below_region = img_bgr[below_y0:h, 0:w]
         card_box, card_bottom_y = _locate_card_bottom_in_region(below_region, below_y0)
-
+ 
         abalone_y0 = min(card_bottom_y + MARGIN, h - 1)
         abalone_box = (0, abalone_y0, w, h)
-
+ 
         return {"type": "stacked", "card_box": card_box, "abalone_box": abalone_box}
-
-
+ 
+ 
 def _locate_card_bottom_in_region(region_bgr, y_offset):
     h, w = region_bgr.shape[:2]
     hsv = cv2.cvtColor(region_bgr, cv2.COLOR_BGR2HSV)
     H, S, V = hsv[:, :, 0].astype(float), hsv[:, :, 1].astype(float), hsv[:, :, 2].astype(float)
-
+ 
     bands = {
         "yellow":  (H >= 20)  & (H <= 35)  & (S > 150) & (V > 80),
         "cyan":    (H >= 85)  & (H <= 100) & (S > 150) & (V > 80),
@@ -176,7 +175,7 @@ def _locate_card_bottom_in_region(region_bgr, y_offset):
     k_close = np.ones((8, 8), np.uint8)
     k_open  = np.ones((4, 4), np.uint8)
     MIN_PX, MAX_PX = 50, 600
-
+ 
     boxes = []  # (xb, yb, bw, bh) for every candidate patch
     for band in bands.values():
         mask = band.astype(np.uint8) * 255
@@ -192,53 +191,52 @@ def _locate_card_bottom_in_region(region_bgr, y_offset):
             if cv2.contourArea(c) < (MIN_PX ** 2) * 0.5:
                 continue
             boxes.append((xb, yb, bw, bh))
-
+ 
     if not boxes:
         # Fallback: assume card occupies roughly the top third of the region
         fallback_bottom = y_offset + int(h * 0.35)
         return (0, y_offset, w, fallback_bottom), fallback_bottom
-
+ 
     centres = np.array([(xb + bw / 2.0, yb + bh / 2.0) for xb, yb, bw, bh in boxes])
     median_centre = np.median(centres, axis=0)
-
+ 
     sizes = np.array([(bw + bh) / 2.0 for _, _, bw, bh in boxes])
     typical_size = np.median(sizes)
     cluster_radius = typical_size * 6.0   # card spans ~6 patches across
-
+ 
     dists = np.linalg.norm(centres - median_centre, axis=1)
     keep = dists <= cluster_radius
-
+ 
     if not np.any(keep):
         fallback_bottom = y_offset + int(h * 0.35)
         return (0, y_offset, w, fallback_bottom), fallback_bottom
-
+ 
     kept_boxes = [b for b, k in zip(boxes, keep) if k]
     xs = [xb for xb, yb, bw, bh in kept_boxes] + [xb + bw for xb, yb, bw, bh in kept_boxes]
     ys = [yb for xb, yb, bw, bh in kept_boxes] + [yb + bh for xb, yb, bw, bh in kept_boxes]
-
+ 
     pad = 60
     x0, x1 = max(0, min(xs) - pad), min(w, max(xs) + pad)
     y0, y1 = max(0, min(ys) - pad), min(h, max(ys) + pad)
     card_box_full = (x0, y_offset + y0, x1, y_offset + y1)
     return card_box_full, y_offset + y1
-
+ 
 # SCALE CALIBRATION — via ColourChecker detection library
-
+ 
 PATCH_SIZE_MM  = 12.0   # physical size of one patch (mm)
 N_PATCHES_LONG = 6      # patches along the long card dimension
-
-
+ 
+ 
 def pixels_per_mm(img_bgr, card_box,
-                  ruler_real_mm=RULER_REAL_MM,
                   debug_dir=None, stem=""):
     cx0, cy0, cx1, cy1 = card_box
     region = img_bgr[cy0:cy1, cx0:cx1]
-
+ 
     hsv = cv2.cvtColor(region, cv2.COLOR_BGR2HSV)
     H   = hsv[:, :, 0].astype(float)
     S   = hsv[:, :, 1].astype(float)
     V   = hsv[:, :, 2].astype(float)
-
+ 
     # Colour bands targeting individual, well-separated patches
     bands = {
         "yellow":  (H >= 20)  & (H <= 35)  & (S > 150) & (V > 80),
@@ -247,16 +245,16 @@ def pixels_per_mm(img_bgr, card_box,
         "green":   (H >= 60)  & (H <= 85)  & (S > 150) & (V > 60),
         "orange":  (H >= 5)   & (H <= 20)  & (S > 150) & (V > 80),
     }
-
+ 
     k_close = np.ones((8,  8),  np.uint8)
     k_open  = np.ones((4,  4),  np.uint8)
-
+ 
     # Expected patch size range in pixels (very wide tolerance)
     MIN_PX, MAX_PX = 50, 600
-
+ 
     patch_sizes   = []
     patch_centres = []   # in region-local coordinates for now
-
+ 
     for name, band in bands.items():
         mask = band.astype(np.uint8) * 255
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, k_close)
@@ -273,16 +271,16 @@ def pixels_per_mm(img_bgr, card_box,
                 continue
             patch_sizes.append((bw + bh) / 2.0)
             patch_centres.append((xb + bw // 2, yb + bh // 2))
-
+ 
     if len(patch_sizes) < 2:
         raise ValueError(
             f"Only {len(patch_sizes)} colour patch(es) found in card region "
             f"{card_box} — check that the ColorChecker card was located correctly.")
-
+ 
     px_per_mm = float(np.median(patch_sizes)) / PATCH_SIZE_MM
-
+ 
     region_h, region_w = region.shape[:2]
-
+ 
     if len(patch_centres) >= 3:
         pts        = np.array(patch_centres, dtype=np.int32)
         # Add generous padding so the overlay covers the full card body
@@ -296,11 +294,11 @@ def pixels_per_mm(img_bgr, card_box,
     else:
         quad_pts = np.array(patch_centres, dtype=np.int32)
     quad_pts = quad_pts + np.array([cx0, cy0], dtype=np.int32)
-
+ 
     return px_per_mm, quad_pts
-
+ 
 # ABALONE SEGMENTATION
-
+ 
 def segment_abalone(img_bgr, search_box, near_edge, card_box,
                     min_area_px=50_000,
                     debug_dir=None, stem=""):
@@ -308,14 +306,14 @@ def segment_abalone(img_bgr, search_box, near_edge, card_box,
     x0, y0, x1, y1 = search_box
     roi = img_bgr[y0:y1, x0:x1]
     roi_h, roi_w = roi.shape[:2]
-
+ 
     hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
     S   = hsv[:, :, 1].astype(float)
     V   = hsv[:, :, 2].astype(float)
-
+ 
     k_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (25, 25))
     k_open  = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10, 10))
-
+ 
     # PASS 1: high-confidence pixels 
     # S>35 = colourful shell/lip/tissue
     # V<110 = excludes bright nacre rim (nacre V mean=120)
@@ -323,37 +321,37 @@ def segment_abalone(img_bgr, search_box, near_edge, card_box,
     mask_hc = ((S > 35) & (V < 110) & (V > 15)).astype(np.uint8) * 255
     mask_hc = cv2.morphologyEx(mask_hc, cv2.MORPH_CLOSE, k_close)
     mask_hc = cv2.morphologyEx(mask_hc, cv2.MORPH_OPEN,  k_open)
-
+ 
     cnts_hc, _ = cv2.findContours(mask_hc, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not cnts_hc:
         return None, None
-
+ 
     valid_hc = [c for c in cnts_hc if cv2.contourArea(c) > min_area_px * 0.3]
     if not valid_hc:
         return None, None
-
+ 
     anchor      = max(valid_hc, key=cv2.contourArea)
     anchor_mask = np.zeros((roi_h, roi_w), np.uint8)
     cv2.drawContours(anchor_mask, [anchor], -1, 255, cv2.FILLED)
-
+ 
     # PASS 2: wider threshold inside the anchor region 
     search_region = cv2.dilate(anchor_mask, np.ones((40, 40), np.uint8))
     mask_w = (((S > 20) & (V < 120) & (V > 15)) & (search_region > 0)).astype(np.uint8) * 255
     mask_w = cv2.morphologyEx(mask_w, cv2.MORPH_CLOSE, k_close)
     mask_w = cv2.morphologyEx(mask_w, cv2.MORPH_OPEN,  np.ones((6, 6), np.uint8))
-
+ 
     if debug_dir and stem:
         cv2.imwrite(os.path.join(debug_dir, f"{stem}_seg_mask.jpg"), mask_w)
-
+ 
     contours, _ = cv2.findContours(mask_w, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
         return None, None
-
+ 
     # SELECT best contour 
     CARD_OVERLAP_THRESH = 0.05
-
+ 
     cb_x0, cb_y0, cb_x1, cb_y1 = card_box
-
+ 
     valid = []
     for cnt in contours:
         area = cv2.contourArea(cnt)
@@ -366,12 +364,12 @@ def segment_abalone(img_bgr, search_box, near_edge, card_box,
             continue
         if max(rw, rh) / min(rw, rh) > 4.0:
             continue
-
+ 
         xc, yc, cntw, cnth = cv2.boundingRect(cnt)
         # Convert contour bounding rect from ROI-local to full-image coords.
         xc_full = xc + x0
         yc_full = yc + y0
-
+ 
         # Card-overlap exclusion 
         ix0 = max(xc_full, cb_x0)
         iy0 = max(yc_full, cb_y0)
@@ -384,7 +382,7 @@ def segment_abalone(img_bgr, search_box, near_edge, card_box,
                 print(f"    [SKIP] Contour rejected — {overlap_area / contour_bbox_area:.1%} "
                       f"overlap with card region (likely card patches, not abalone).")
                 continue
-
+ 
         if near_edge == "left":
             if rw > roi_w * 0.90 or xc <= 10:
                 continue
@@ -397,25 +395,25 @@ def segment_abalone(img_bgr, search_box, near_edge, card_box,
         elif near_edge == "bottom":
             if rh > roi_h * 0.90 or (yc + cnth) >= roi_h - 10:
                 continue
-
+ 
         valid.append(cnt)
-
+ 
     if not valid:
         return None, None
-
+ 
     best      = max(valid, key=cv2.contourArea)
     best_hull = cv2.convexHull(best)   
   
     best_hull[:, :, 0] += x0
     best_hull[:, :, 1] += y0
-
+ 
     full_mask = np.zeros((h, w), dtype=np.uint8)
     cv2.drawContours(full_mask, [best_hull], -1, 255, cv2.FILLED)
-
+ 
     return best_hull, full_mask
-
+ 
 # MEASUREMENT
-
+ 
 def measure_abalone(contour, mask, px_mm):
     """Return dict with length_mm, width_mm, area_mm2, rect, box_pts."""
     rect      = cv2.minAreaRect(contour)
@@ -423,7 +421,7 @@ def measure_abalone(contour, mask, px_mm):
     length_px = max(box_w, box_h)
     width_px  = min(box_w, box_h)
     area_px   = float(np.count_nonzero(mask))
-
+ 
     return {
         "length_mm": round(length_px / px_mm, 2),
         "width_mm":  round(width_px  / px_mm, 2),
@@ -431,26 +429,26 @@ def measure_abalone(contour, mask, px_mm):
         "rect":      rect,
         "box_pts":   cv2.boxPoints(rect).astype(int),
     }
-
+ 
 # VISUALISATION
-
+ 
 def save_annotated(img_bgr, contour, meas, divider, px_mm, out_path,
                    card_quad=None):
     vis = img_bgr.copy()
     h, w = vis.shape[:2]
-
+ 
     font  = cv2.FONT_HERSHEY_SIMPLEX
     fsc   = max(1.0, w / 3000)
     thick = max(2, int(w / 1500))
     lh    = int(55 * fsc)
-
+ 
     # Divider line 
     divider_mid = (divider["start"] + divider["end"]) // 2
     if divider["orientation"] == "vertical":
         cv2.line(vis, (divider_mid, 0), (divider_mid, h), (255, 180, 0), 3)
     else:
         cv2.line(vis, (0, divider_mid), (w, divider_mid), (255, 180, 0), 3)
-
+ 
     # ColorChecker card overlay 
     if card_quad is not None:
         pts = card_quad.reshape((-1, 1, 2))
@@ -467,15 +465,15 @@ def save_annotated(img_bgr, contour, meas, divider, px_mm, out_path,
                     font, fsc * 0.85, (0, 0, 0), thick + 3, cv2.LINE_AA)
         cv2.putText(vis, scale_lbl, (lbl_x, lbl_y),
                     font, fsc * 0.85, (255, 200, 0), thick, cv2.LINE_AA)
-
+ 
     # Abalone contour + bounding box 
     cv2.drawContours(vis, [contour],         -1, (0, 230, 60),  4)
     cv2.drawContours(vis, [meas["box_pts"]], -1, (0, 220, 255), 3)
-
+ 
     rect = meas["rect"]
     cx   = int(rect[0][0])
     cy   = int(rect[0][1])
-
+ 
     for i, lbl in enumerate([
         f"Length: {meas['length_mm']:.1f} mm",
         f"Width:  {meas['width_mm']:.1f} mm",
@@ -486,7 +484,7 @@ def save_annotated(img_bgr, contour, meas, divider, px_mm, out_path,
                     font, fsc, (0, 0, 0), thick + 3, cv2.LINE_AA)
         cv2.putText(vis, lbl, (cx, ypos),
                     font, fsc, (0, 255, 200), thick, cv2.LINE_AA)
-
+ 
     # Scale bar 
     bar_mm = 20
     bar_px = int(bar_mm * px_mm)
@@ -495,46 +493,46 @@ def save_annotated(img_bgr, contour, meas, divider, px_mm, out_path,
     cv2.rectangle(vis, (bx, by - 25), (bx + bar_px, by), (255, 255, 255), 3)
     cv2.putText(vis, f"{bar_mm} mm", (bx, by - 35),
                 font, fsc, (255, 255, 255), thick, cv2.LINE_AA)
-
+ 
     cv2.imwrite(out_path, vis)
-
+ 
 # PER-IMAGE PIPELINE
-
-def process_image(img_path, vis_dir, ruler_real_mm, min_area_px, debug):
+ 
+def process_image(img_path, vis_dir, min_area_px, debug):
     stem    = Path(img_path).stem
     img_bgr = cv2.imread(img_path)
     if img_bgr is None:
         print(f"  [WARN] Cannot read: {img_path}")
         return None
-
+ 
     debug_dir = vis_dir if debug else None
     h, w = img_bgr.shape[:2]
-
+ 
     divider = detect_divider(img_bgr)
     layout  = detect_layout(img_bgr, divider)
-
+ 
     try:
         px_mm, card_pts = pixels_per_mm(img_bgr, layout["card_box"],
-                                        ruler_real_mm, debug_dir, stem)
+                                        debug_dir, stem)
     except ValueError as exc:
         print(f"  [WARN] Scale error ({stem}, layout={layout['type']}): {exc}")
         return None
-
+ 
     ax0, ay0, ax1, ay1 = layout["abalone_box"]
     if layout["type"] == "side_by_side":
         near_edge = "left" if ax0 == 0 else "right"
     else:  # stacked
         near_edge = "top"  # abalone box always starts below card/divider
-
+ 
     contour, mask = segment_abalone(img_bgr, layout["abalone_box"], near_edge,
                                     layout["card_box"],
                                     min_area_px, debug_dir, stem)
     if contour is None:
         print(f"  [WARN] No abalone found in {stem} (layout={layout['type']})")
         return None
-
+ 
     meas = measure_abalone(contour, mask, px_mm)
-
+ 
     # Plausibility check 
     # Flag measurements outside the expected size range for greenlip abalone.
     length = meas["length_mm"]
@@ -545,17 +543,17 @@ def process_image(img_path, vis_dir, ruler_real_mm, min_area_px, debug):
               f"({LENGTH_MIN_MM}–{LENGTH_MAX_MM} mm). Flagged in CSV.")
     else:
         check_flag = ""
-
+ 
     if vis_dir:
         vis_path = os.path.join(vis_dir, f"{stem}_annotated.jpg")
         save_annotated(img_bgr, contour, meas, divider, px_mm, vis_path,
                        card_quad=card_pts)
-
+ 
     print(f"  {stem}: L={meas['length_mm']} mm  "
           f"W={meas['width_mm']} mm  "
           f"A={meas['area_mm2']} mm2  "
           f"[{px_mm:.2f} px/mm]  [layout={layout['type']}]")
-
+ 
     return {
         "filename":        Path(img_path).name,
         "length_mm":       meas["length_mm"],
@@ -565,21 +563,20 @@ def process_image(img_path, vis_dir, ruler_real_mm, min_area_px, debug):
         "layout":          layout["type"],
         "check":           check_flag,
     }
-
+ 
 # MAIN
-
+ 
 def main():
     ap = argparse.ArgumentParser(
         description="Batch abalone morphometrics from lightbox JPEG images.")
     ap.add_argument("--images",      required=True)
     ap.add_argument("--output",      required=True)
     ap.add_argument("--vis_dir",     default=None)
-    ap.add_argument("--scale_mm",    type=float, default=RULER_REAL_MM)
     ap.add_argument("--ext",         default="jpg,jpeg")
     ap.add_argument("--min_area_px", type=int, default=50_000)
     ap.add_argument("--debug",       action="store_true")
     args = ap.parse_args()
-
+ 
     exts      = [e.strip().lstrip(".") for e in args.ext.split(",")]
     img_paths = []
     for ext in exts:
@@ -587,43 +584,43 @@ def main():
         img_paths += glob.glob(os.path.join(args.images, "**", f"*.{ext}"),         recursive=True)
         img_paths += glob.glob(os.path.join(args.images, "**", f"*.{ext.upper()}"), recursive=True)
     img_paths = sorted(set(img_paths))
-
+ 
     # Report how many subfolders were found
     subfolders = sorted(set(os.path.dirname(p) for p in img_paths))
     print(f"Scanning {len(subfolders)} folder(s):")
     for sf in subfolders:
         count = sum(1 for p in img_paths if os.path.dirname(p) == sf)
         print(f"  {sf}  ({count} image(s))")
-
+ 
     if not img_paths:
         print(f"No images found in: {args.images}")
         sys.exit(1)
-
+ 
     print(f"Found {len(img_paths)} image(s).\n")
-
+ 
     os.makedirs(os.path.dirname(os.path.abspath(args.output)) or ".", exist_ok=True)
     if args.vis_dir:
         os.makedirs(args.vis_dir, exist_ok=True)
-
+ 
     results = []
     for img_path in img_paths:
         print(f"Processing: {Path(img_path).name}")
-        r = process_image(img_path, args.vis_dir, args.scale_mm,
+        r = process_image(img_path, args.vis_dir,
                           args.min_area_px, args.debug)
         if r:
             results.append(r)
-
+ 
     if not results:
         print("No measurements produced.")
         sys.exit(1)
-
+ 
     fieldnames = ["filename", "length_mm", "width_mm", "area_mm2",
                   "scale_px_per_mm", "layout", "check"]
     with open(args.output, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(results)
-
+ 
     print(f"\n{'─'*60}")
     print(f"Done!  {len(results)}/{len(img_paths)} abalone measured.")
     flagged = sum(1 for r in results if r["check"])
@@ -632,7 +629,7 @@ def main():
     print(f"CSV  -> {args.output}")
     if args.vis_dir:
         print(f"Vis  -> {args.vis_dir}")
-
-
+ 
+ 
 if __name__ == "__main__":
     main()
