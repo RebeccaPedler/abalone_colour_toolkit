@@ -87,4 +87,4 @@ systematically underreport true shell length.
 
 - `abalone_measurements.csv` -- paired measurements per image
 - `bland_altman_comparison.png` -- Bland-Altman plots for all data and flagged rows excluded
-- `morphometric_validation_metrics.R` -- R script for reproducing all metrics and plots
+- `morphometric_validation_performance.R` -- R script for reproducing all metrics and plots
