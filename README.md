@@ -1,5 +1,3 @@
-# abalone_colour_data
-
 # abalone_colour_toolkit
 
 A high-throughput pipeline for extracting standardised colour and morphometric measurements from photographs of abalone.
