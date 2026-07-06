@@ -1,26 +1,38 @@
 # abalone_morphometrics — model performance assessment
 # Input:  abalone_measurements.csv
 
-library(readxl)
+library(readr)
 library(dplyr)
 library(ggplot2)
 library(patchwork)   
 library(here)
 
-# Load 
-dat <- read_excel("abalone_measurements.csv") |>
-  rename(manual   = start_length_mm,
-         detected = detected_length,
-         flag     = `check?`) |>
+# Load and clean data
+dat <- read.csv("abalone_measurements.csv", na.strings = c("", "NA")) |>
+  mutate(
+    manual_length_mm = as.numeric(manual_length_mm),
+    length_mm = as.numeric(length_mm)
+  ) |>
+  filter(
+    !is.na(manual_length_mm),
+    !is.na(length_mm)
+  ) |>
+  rename(
+    manual   = manual_length_mm,
+    detected = length_mm,
+  ) |>
   mutate(
     diff     = detected - manual,
     abs_err  = abs(diff),
     mean_val = (manual + detected) / 2,
-    flagged  = flag != "0"
   )
 
+str(dat)
+
 # Clean subset: flagged rows removed
-dat_clean <- filter(dat, !flagged)
+dat_clean <- dat |>
+               filter(is.na(check))
+str(dat_clean)
 
 # Metrics function
 metrics <- function(d, label) {
@@ -60,7 +72,10 @@ ba_plot <- function(d, title) {
          y = "Difference: detected - manual (mm)") +
     coord_cartesian(ylim = c(-30, 30)) +
     theme_bw(base_size = 11) +
-    theme(plot.title = element_text(size = 11, face = "bold"))
+    theme(
+    plot.title = element_text(size = 11, face = "bold"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank())
 }
 
 # Build and save plots 
@@ -68,6 +83,8 @@ p1 <- ba_plot(dat,       paste0("All data  (n = ", nrow(dat), ")"))
 p2 <- ba_plot(dat_clean, paste0("Flagged rows excluded  (n = ", nrow(dat_clean), ")"))
 
 combined <- p1 + p2 + plot_layout(ncol = 2)
+
+combined # Print
 
 ggsave(here("validation", "morphometrics","bland_altman_comparison.png"), combined, width = 12, height = 5, dpi = 300)
 
