@@ -85,4 +85,4 @@ A small number of images (2.26%) had no checker detected at all and were exclude
   category, per-channel slope/intercept/R², patch count, and dE before/after for all
   1,371 images
 - `calibration_summary.csv` -- summary statistics generated from `correction_factors.csv`
-- `colour_correction_validation.R` -- R script used to compute the summary statistics
+- `colour_correction_performance.R` -- R script used to compute the summary statistics
