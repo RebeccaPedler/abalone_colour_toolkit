@@ -26,7 +26,7 @@ abalone_colour_toolkit/
 │   ├── images/raw_images/                # 1 .JPG test images
 │   ├── correction_factors.csv
 │   ├── Whole_Color_Measurements.csv
-│   ├── abalone_measurements.csv
+│   ├── abalone_measurements_test.csv
 │   ├── collated_colour_data.csv
 │   ├── summary.csv
 │   └── *_metadata.csv                    # Metadata for each csv output
