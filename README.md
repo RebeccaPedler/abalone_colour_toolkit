@@ -68,7 +68,7 @@ Paired manual and script-derived length measurements for 2,261 images.
 
 ## Setup
 
-See `REQUIREMENTS.md` for Python and R package versions. Install the Python packages, then the YOLO segmentation weights (`segmentation_model_weights/weights/best.pt`) are ready to use as-is; no separate download is required.
+See `REQUIREMENTS.md` for Python and R package versions. Install the Python packages, then the YOLO segmentation weights (`segmentation_model_weights/best.pt`) are ready to use as-is; no separate download is required.
 
 ---
 
@@ -88,7 +88,7 @@ python scripts/01_colour_correction_factors.py \
 
 ```
 python scripts/02_segment_lips.py \
-    --weights segmentation_model_weights/weights/best.pt \
+    --weights segmentation_model_weights/best.pt \
     --source test_run/images/raw_images \
     --out test_run/images/lip_cutouts
 ```
@@ -171,6 +171,12 @@ Compared script-generated lip segmentations against manual Photoshop segmentatio
 ### Morphometrics
 
 Compared `05_abalone_morphometrics.py` length measurements against manual board measurements across 2,261 paired images. See `validation/morphometrics/morphometric_validation.md` for full method and results.
+
+---
+
+## License
+
+This repository is released under the MIT License. See `LICENSE.md` for the full text.
 
 ---
 
