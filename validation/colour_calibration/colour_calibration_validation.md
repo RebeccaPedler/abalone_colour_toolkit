@@ -12,7 +12,7 @@ n = 1,371 images processed through the colour calibration performed using the Py
   and fit was assessed by R²
 - Calibration performance was measured using Delta E (dE), calculated before and after correction was applied
 - Each calibrated image was assigned a quality score based on the R² and dE_after:
-  - **Good**: mean R² > 0.85 and dE_after < 8
+  - **Good**: mean R² > 0.85 and dE_after < 6
   - **Acceptable**: mean R² > 0.70 and dE_after < 10
   - **Poor**: does not meet either of the above
 - Images where no checker could be detected in any rotation were labelled `no_checker_found` and excluded from calibration
@@ -43,9 +43,9 @@ calibration
 
 | Quality | n | % of calibrated images |
 |---|---|---|
-| Good | 1,163 | 86.86% |
-| Acceptable | 168 | 12.55% |
-| Poor | 8 | 0.60% |
+| Good | 1,130 | 84.39% |
+| Acceptable | 44 | 3.29% |
+| Poor | 165 | 12.32% |
 
 ### Channel fit (R²)
 
@@ -70,9 +70,9 @@ Mean number of checker patches detected across calibrated images was 20.29 (out 
 
 ## Findings
 
-The pipeline performed well overall, with the large majority of images (86.9%) achieving a
-good calibration and a further 12.5% achieving an acceptable calibration. Only 0.6% of
-calibrated images (n = 8) were classed as poor. It is up to the discretion of the users of this
+The pipeline performed well overall, with the large majority of images (84.4%) achieving a
+good calibration and a further 3.3% achieving an acceptable calibration. 12.3% of
+calibrated images (n = 165) were classed as poor. It is up to the discretion of the users of this
 pipeline as to whether to exclude images on the basis of dE.
 
 Mean R² was highest for a* and b* (0.976 and 0.972) and lowest for L* (0.935).
