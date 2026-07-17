@@ -81,7 +81,7 @@ def main():
     source = Path(args.source).expanduser().resolve()
     out = Path(args.out).expanduser().resolve()
     weights = Path(args.weights).expanduser().resolve()
-        try:
+    try:
         out.mkdir(parents=True, exist_ok=True)
     except OSError as e:
         suggested = Path.home() / "Documents" / "processed"
@@ -90,6 +90,8 @@ def main():
               f"{suggested}")
         return
     os.chdir(out)   # keep any writes on a known-writable, non-OneDrive path
+
+    images = find_images(source)
     if not images:
         print(f"No images found under {source}")
         return
