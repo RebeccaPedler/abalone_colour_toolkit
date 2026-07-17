@@ -81,17 +81,15 @@ def main():
     source = Path(args.source).expanduser().resolve()
     out = Path(args.out).expanduser().resolve()
     weights = Path(args.weights).expanduser().resolve()
-    try:
-    out.mkdir(parents=True, exist_ok=True)
+        try:
+        out.mkdir(parents=True, exist_ok=True)
     except OSError as e:
-    suggested = Path.home() / "Documents" / "processed"
-    print(f"Could not create output folder '{out}'.\n  {e}\n"
-          "Use a local path outside OneDrive/cloud-synced folders, e.g. "
-          f"{suggested}")
-    return
+        suggested = Path.home() / "Documents" / "processed"
+        print(f"Could not create output folder '{out}'.\n  {e}\n"
+              "Use a local path outside OneDrive/cloud-synced folders, e.g. "
+              f"{suggested}")
+        return
     os.chdir(out)   # keep any writes on a known-writable, non-OneDrive path
-
-    images = find_images(source)
     if not images:
         print(f"No images found under {source}")
         return
