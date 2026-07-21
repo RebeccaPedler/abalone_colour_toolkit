@@ -1,19 +1,19 @@
 column_name,data_type,description
-image_id,Text,Filename stem of the ColorChecker card image (no extension).
-status,Text,"Processing outcome: 'calibrated', 'no_checker_found', 'fit_failed', or 'load_failed'."
-quality,Text,"Calibration quality band: 'good' (R2>0.85, dE_after<8), 'acceptable' (R2>0.70, dE_after<10), or 'poor'. Blank if status is not 'calibrated'."
+image_id,Text,File name of the image (e.g. IMG_3428.JPG)
+status,Text,"Processing outcome: 'calibrated', 'no_checker_found', 'fit_failed', or 'load_failed'"
+quality,Text,"Calibration quality: 'good' (R2>0.85, dE_after<8), 'acceptable' (R2>0.70, dE_after<10), or 'poor'. Blank if status is not 'calibrated'"
 rotation,Text,"Image rotation at which the ColorChecker card was detected (0, 90CW, 180, 90CCW)."
-orientation,Text,"Detected patch grid orientation and flip used for the best fit (e.g. 4x6, 6x4_flipLR)."
-n_patches,Integer,Number of ColorChecker patches used in the correction fit.
-L_slope,Decimal,Slope of the linear correction fit for the CIELAB L channel.
-L_intercept,Decimal,Intercept of the linear correction fit for the CIELAB L channel.
-L_r2,Decimal,R-squared of the linear correction fit for the CIELAB L channel.
-a_slope,Decimal,Slope of the linear correction fit for the CIELAB a channel.
-a_intercept,Decimal,Intercept of the linear correction fit for the CIELAB a channel.
-a_r2,Decimal,R-squared of the linear correction fit for the CIELAB a channel.
-b_slope,Decimal,Slope of the linear correction fit for the CIELAB b channel.
-b_intercept,Decimal,Intercept of the linear correction fit for the CIELAB b channel.
-b_r2,Decimal,R-squared of the linear correction fit for the CIELAB b channel.
-dE_before,Decimal,"Mean Delta E between detected and reference patch Lab values, before correction."
-dE_after,Decimal,"Mean Delta E between corrected and reference patch Lab values, after correction. Values above 10 force a 'poor' quality label regardless of R2."
+orientation,Text,"Detected grid orientation and flip used for the best fit (e.g. 4x6, 6x4_flipLR)"
+n_patches,Integer,Number of ColorChecker patches used in the correction fit
+L_slope,Decimal,Slope of the linear correction fit for the CIELAB lightness channel
+L_intercept,Decimal,Intercept of the linear correction fit for the CIELAB lightness channel
+L_r2,Decimal,R-squared of the linear correction fit for the CIELAB lightness channel
+a_slope,Decimal,Slope of the linear correction fit for the CIELAB a* (green – red) channel
+a_intercept,Decimal,Intercept of the linear correction fit for the CIELAB a* (green – red) channel
+a_r2,Decimal,R-squared of the linear correction fit for the CIELAB a* (green – red) channel
+b_slope,Decimal,Slope of the linear correction fit for the CIELAB b* (blue – yellow) channel
+b_intercept,Decimal,Intercept of the linear correction fit for the CIELAB b* (blue – yellow) channel
+b_r2,Decimal,R-squared of the linear correction fit for the CIELAB b* (blue – yellow) channel
+dE_before,Decimal,Mean ΔE between detected and reference patch Lab values before correction
+dE_after,Decimal,"Mean ΔE between corrected and reference patch Lab values, after correction. Values above 10 force a 'poor' quality label regardless of R2"
 note,Text,"Free-text note, e.g. 'use day-level fallback' when no checker card was found."

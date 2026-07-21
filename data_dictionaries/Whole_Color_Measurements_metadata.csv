@@ -1,11 +1,11 @@
 column_name,data_type,description
-image_ID,Text,"Filename stem of the lip cutout, with the '_lip' suffix stripped."
-mean red,Decimal,Mean red channel value (0-255) across lip pixels passing the HSB threshold.
-green,Decimal,Mean green channel value (0-255) across lip pixels passing the HSB threshold.
-blue,Decimal,Mean blue channel value (0-255) across lip pixels passing the HSB threshold.
-hue,Decimal,"Mean hue value (0-255 scale, matching ImageJ's HSB Stack) across lip pixels passing the threshold."
-saturation,Decimal,Mean saturation value (0-255 scale) across lip pixels passing the threshold.
-brightness,Decimal,Mean brightness value (0-255 scale) across lip pixels passing the threshold.
-lightness,Decimal,Mean uncorrected CIELAB L value across lip pixels passing the threshold. sRGB(D65) to XYZ to Lab pipeline.
-a,Decimal,Mean uncorrected CIELAB a value across lip pixels passing the threshold.
-b,Decimal,Mean uncorrected CIELAB b value across lip pixels passing the threshold.
+image_ID,Text,Image file name
+mean red,Decimal,Mean red channel value
+green,Decimal,Mean green channel value
+blue,Decimal,Mean blue channel value
+hue,Decimal,Mean hue value
+saturation,Decimal,Mean saturation value
+brightness,Decimal,Mean brightness value
+lightness,Decimal,Mean uncorrected CIELAB lightness
+a,Decimal,Mean uncorrected CIELAB a* (green-red) value
+b,Decimal,Mean uncorrected CIELAB b* (blue – yellow) value

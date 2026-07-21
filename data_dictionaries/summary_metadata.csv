@@ -1,4 +1,4 @@
 column_name,data_type,description
-image,Text,Full file path to the original source image.
-status,Text,"Lip detection outcome: 'ok', 'no_lip_found', or 'unreadable'."
-lip_pct_of_frame,Decimal,Percentage of the image frame occupied by the segmented lip mask. 0 if no lip was found.
+image,Text,File name of the image (e.g. IMG_3428.JPG)
+status,Text,"Lip detection outcome: 'ok', 'no_lip_found', or 'unreadable'"
+lip_pct_of_frame,Decimal,Percentage of the image frame occupied by the segmented lip mask (0 if no lip was found)

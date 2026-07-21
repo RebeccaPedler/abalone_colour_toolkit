@@ -1,8 +1,8 @@
 column_name,data_type,description
-filename,Text,"Original image filename, including extension."
-length_mm,Decimal,"Abalone shell length, longest dimension of the minimum-area bounding rectangle, in millimetres."
-width_mm,Decimal,"Abalone shell width, shortest dimension of the minimum-area bounding rectangle, in millimetres."
-area_mm2,Decimal,"Filled contour area of the segmented abalone, in square millimetres."
-scale_px_per_mm,Decimal,Pixels-per-millimetre scale factor derived from the ColorChecker card patch size in this image.
-layout,Text,"Detected photo layout: 'side_by_side' (vertical divider, card and abalone in opposite halves) or 'stacked' (horizontal divider, card above abalone)."
-check,Text,Flag populated when length_mm falls outside the plausible range (60-130 mm) for greenlip abalone. Blank if within range. Flagged rows are not excluded and require manual review.
+filename,Text,Image file name
+length_mm,Decimal,Abalone shell length in milometers
+width_mm,Decimal,Abalone shell width in milometers
+area_mm2,Decimal,Area of the segmented abalone in milometers squared
+scale_px_per_mm,Decimal,Pixels-per-millimetre scale factor derived from the ColorChecker card
+layout,Text,"Detected photo layout: 'side_by_side' (vertical divider, card and abalone in opposite halves) or 'stacked' (horizontal divider, card above abalone)"
+check,Text,Flag populated when length_mm falls outside the plausible biological range (60-130 mm) and blank if within range. Flagged rows are not excluded and require manual review

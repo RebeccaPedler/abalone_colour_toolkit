@@ -1,27 +1,27 @@
 column_name,data_type,description
-image_id,Text,"Filename stem, join key across all three source files."
-lip_segmentation_status,Text,"From segment_lips.py: 'ok', 'no_lip_found', or 'unreadable'."
-lip_pct_of_frame,Decimal,From segment_lips.py: percentage of frame occupied by the lip mask.
-correction_status,Text,"From colour_correction_factors.py: 'calibrated', 'no_checker_found', 'fit_failed', or 'load_failed'."
-correction_quality,Text,"From colour_correction_factors.py: 'good', 'acceptable', or 'poor'. Rows marked 'poor' are excluded from corrected_L/a/b."
-correction_rotation,Text,Rotation at which the ColorChecker card was detected.
-correction_orientation,Text,Detected patch grid orientation and flip used for the correction fit.
-n_patches,Integer,Number of ColorChecker patches used in the correction fit.
-L_slope,Decimal,Slope of the linear correction fit for the CIELAB L channel.
-L_intercept,Decimal,Intercept of the linear correction fit for the CIELAB L channel.
-L_r2,Decimal,R-squared of the linear correction fit for the CIELAB L channel.
-a_slope,Decimal,Slope of the linear correction fit for the CIELAB a channel.
-a_intercept,Decimal,Intercept of the linear correction fit for the CIELAB a channel.
-a_r2,Decimal,R-squared of the linear correction fit for the CIELAB a channel.
-b_slope,Decimal,Slope of the linear correction fit for the CIELAB b channel.
-b_intercept,Decimal,Intercept of the linear correction fit for the CIELAB b channel.
-b_r2,Decimal,R-squared of the linear correction fit for the CIELAB b channel.
-dE_before,Decimal,"Mean Delta E between detected and reference patch Lab values, before correction."
-dE_after,Decimal,"Mean Delta E between corrected and reference patch Lab values, after correction."
-uncorrected_L,Decimal,"Raw mean CIELAB L value from extract_lip_colour.py, before correction is applied."
-uncorrected_a,Decimal,"Raw mean CIELAB a value from extract_lip_colour.py, before correction is applied."
-uncorrected_b,Decimal,"Raw mean CIELAB b value from extract_lip_colour.py, before correction is applied."
-corrected_L,Decimal,"CIELAB L value after applying L_slope and L_intercept. Blank if correction factors, colour data, or a non-poor quality rating are not all present."
-corrected_a,Decimal,CIELAB a value after applying a_slope and a_intercept. Blank under the same conditions as corrected_L.
-corrected_b,Decimal,CIELAB b value after applying b_slope and b_intercept. Blank under the same conditions as corrected_L.
-note,Text,"Free-text note carried over from correction_factors.csv, e.g. 'use day-level fallback'."
+image_id,Text,Image file name
+lip_segmentation_status,Text,"From segment_lips.py: 'ok', 'no_lip_found', or 'unreadable'"
+lip_pct_of_frame,Decimal,From segment_lips.py: percentage of frame occupied by the lip mask
+correction_status,Text,"From colour_correction_factors.py: 'calibrated', 'no_checker_found', 'fit_failed', or 'load_failed'"
+correction_quality,Text,"From colour_correction_factors.py: 'good', 'acceptable', or 'poor'. Rows marked 'poor' are excluded from corrected L, a, and b columns"
+correction_rotation,Text,Rotation at which the ColorChecker card was detected
+correction_orientation,Text,Detected patch grid orientation and flip used for the correction fit
+n_patches,Integer,Number of ColorChecker patches used in the correction fit
+L_slope,Decimal,Slope of the linear correction fit for the CIELAB L channel
+L_intercept,Decimal,Intercept of the linear correction fit for the CIELAB L channel
+L_r2,Decimal,R2 of the linear correction fit for the CIELAB L channel
+a_slope,Decimal,Slope of the linear correction fit for the CIELAB a channel
+a_intercept,Decimal,Intercept of the linear correction fit for the CIELAB a channel
+a_r2,Decimal,R2 of the linear correction fit for the CIELAB a channel
+b_slope,Decimal,Slope of the linear correction fit for the CIELAB b channel
+b_intercept,Decimal,Intercept of the linear correction fit for the CIELAB b channel
+b_r2,Decimal,R2 of the linear correction fit for the CIELAB b channel
+dE_before,Decimal,"Mean ΔE between detected and reference patch Lab values, before correction"
+dE_after,Decimal,"Mean ΔE between corrected and reference patch Lab values, after correction"
+uncorrected_L,Decimal,"Raw mean lightness value from extract_lip_colour.py, before correction is applied"
+uncorrected_a,Decimal,"Raw mean a* (green – red) value from extract_lip_colour.py, before correction is applied"
+uncorrected_b,Decimal,"Raw mean b* (blue – yellow) value from extract_lip_colour.py, before correction is applied"
+corrected_L,Decimal,"Lightness value after applying L_slope and L_intercept. Blank if correction factors, colour data, or quality rating are not all present"
+corrected_a,Decimal,"a* (green – red) value after applying a_slope and a_intercept. Blank if correction factors, colour data, or quality rating are not all present"
+corrected_b,Decimal,"b* (blue – yellow) value after applying b_slope and b_intercept. Blank if correction factors, colour data, or quality rating are not all present"
+note,Text,"Free-text note carried over from correction_factors.csv, e.g. 'use day-level fallback'"
