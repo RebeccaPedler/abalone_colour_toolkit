@@ -1,7 +1,7 @@
 column_name,data_type,description
 image_id,Text,Image file name
-lip_segmentation_status,Text,"From segment_lips.py: 'ok', 'no_lip_found', or 'unreadable'"
-lip_pct_of_frame,Decimal,From segment_lips.py: percentage of frame occupied by the lip mask
+ROI_segmentation_status,Text,"From segment_ROIs.py: 'ok', 'no_ROI_found', or 'unreadable'"
+ROI_pct_of_frame,Decimal,From segment_ROIs.py: percentage of frame occupied by the ROI mask
 correction_status,Text,"From colour_correction_factors.py: 'calibrated', 'no_checker_found', 'fit_failed', or 'load_failed'"
 correction_quality,Text,"From colour_correction_factors.py: 'good', 'acceptable', or 'poor'. Rows marked 'poor' are excluded from corrected L, a, and b columns"
 correction_rotation,Text,Rotation at which the ColorChecker card was detected
@@ -18,9 +18,9 @@ b_intercept,Decimal,Intercept of the linear correction fit for the CIELAB b chan
 b_r2,Decimal,R2 of the linear correction fit for the CIELAB b channel
 dE_before,Decimal,"Mean ΔE between detected and reference patch Lab values, before correction"
 dE_after,Decimal,"Mean ΔE between corrected and reference patch Lab values, after correction"
-uncorrected_L,Decimal,"Raw mean lightness value from extract_lip_colour.py, before correction is applied"
-uncorrected_a,Decimal,"Raw mean a* (green – red) value from extract_lip_colour.py, before correction is applied"
-uncorrected_b,Decimal,"Raw mean b* (blue – yellow) value from extract_lip_colour.py, before correction is applied"
+uncorrected_L,Decimal,"Raw mean lightness value from extract_ROI_colour.py, before correction is applied"
+uncorrected_a,Decimal,"Raw mean a* (green – red) value from extract_ROI_colour.py, before correction is applied"
+uncorrected_b,Decimal,"Raw mean b* (blue – yellow) value from extract_ROI_colour.py, before correction is applied"
 corrected_L,Decimal,"Lightness value after applying L_slope and L_intercept. Blank if correction factors, colour data, or quality rating are not all present"
 corrected_a,Decimal,"a* (green – red) value after applying a_slope and a_intercept. Blank if correction factors, colour data, or quality rating are not all present"
 corrected_b,Decimal,"b* (blue – yellow) value after applying b_slope and b_intercept. Blank if correction factors, colour data, or quality rating are not all present"
