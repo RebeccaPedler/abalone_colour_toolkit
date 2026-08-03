@@ -2,9 +2,9 @@
 """
 Script 04: Generate per-image colour correction factors from ColorChecker cards
 =================================================================================
-Joins the outputs of colour_correction_factors.py, segment_lips.py and
-extract_lip_colour.py into one Excel file, one row per image_id, and applies
-the per-image Lab correction factors to the raw lip colour means.
+Joins the outputs of colour_correction_factors.py, segment_ROIs.py and
+extract_ROI_colour.py into one Excel file, one row per image_id, and applies
+the per-image Lab correction factors to the raw ROI colour means.
 
 Usage:
    python collate_colour_data.py --corrections correction_factors.csv --segmentation summary.csv 
@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 OUTPUT_COLUMN_ORDER = [
-    "image_id", "lip_segmentation_status", "lip_pct_of_frame",
+    "image_id", "ROI_segmentation_status", "ROI_pct_of_frame",
     "correction_status", "correction_quality", "correction_rotation",
     "correction_orientation", "n_patches",
     "L_slope", "L_intercept", "L_r2",
@@ -42,7 +42,7 @@ def stem_from_any_path(p: str) -> str:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--corrections", required=True, help="correction_factors.csv")
-    ap.add_argument("--segmentation", required=True, help="summary.csv from segment_lips.py")
+    ap.add_argument("--segmentation", required=True, help="summary.csv from segment_ROIs.py")
     ap.add_argument("--colour-data", required=True, help="Whole_Color_Measurements_pivoted.xlsx")
     ap.add_argument("--output", default="collated_colour_data.xlsx")
     args = ap.parse_args()
@@ -57,8 +57,8 @@ def main():
 
     seg = pd.read_csv(args.segmentation)
     seg["image_id"] = seg["image"].apply(stem_from_any_path)
-    seg = seg.rename(columns={"status": "lip_segmentation_status"})
-    seg = seg[["image_id", "lip_segmentation_status", "lip_pct_of_frame"]]
+    seg = seg.rename(columns={"status": "ROI_segmentation_status"})
+    seg = seg[["image_id", "ROI_segmentation_status", "ROI_pct_of_frame"]]
 
     colour = pd.read_excel(args.colour_data, sheet_name="colour_data")
     colour = colour.rename(columns={
@@ -98,7 +98,7 @@ def main():
         print(f"Note: {n_missing}/{len(df)} image(s) have no corrected_L/a/b "
               f"({n_poor} excluded for 'poor' calibration quality, the rest "
               f"missing colour data or correction factors entirely). Check "
-              f"lip_segmentation_status and correction_status/correction_quality "
+              f"ROI_segmentation_status and correction_status/correction_quality "
               f"in {args.output} to see why.")
 
     df.round(3).to_excel(args.output, index=False)
