@@ -2,7 +2,7 @@
 """
 Script 03: Generate per-image colour correction factors from ColorChecker cards
 =================================================================================
-Run immediately after segment_lips.py. This script takes the white-background lip cutouts
+Run immediately after segment_ROIs.py. This script takes the white-background ROI cutouts
 in <root>/segmented/, applies a HSB colour-threshold to exclude background
 and over/under-exposed pixels, then extracts mean RGB, HSB and CIELAB values
 over the remaining pixels.
@@ -15,11 +15,11 @@ Outputs (written under --root):
                                   / unreadable), for QC
   * <root>/colour_threshold_qc/<mirrors segmented/ subfolders>/<name>_thresh.jpg
         QC image: green tint = pixels used for the colour means, red tint =
-        lip pixels excluded by the threshold (too bright/dark/grey), white
+        ROI pixels excluded by the threshold (too bright/dark/grey), white
         background left as-is.
 
 Usage:
-    python extract_lip_colour.py --root "path\to\segmented"
+    python extract_ROI_colour.py --root "path\to\segmented"
 
 Requirements:
     pip install opencv-python numpy pandas openpyxl matplotlib colour-science
@@ -41,7 +41,7 @@ THRESHOLD = {
     "brightness": {"min": 0,  "max": 160},
 }
 
-LIP_SUFFIX = "_lip"
+ROI_SUFFIX = "_ROI"
 IMG_EXT = {".jpg", ".jpeg", ".png"}
 COLOUR_DATA_COLUMNS = [
     "image_ID", "mean red", "green", "blue",
@@ -51,13 +51,13 @@ COLOUR_DATA_COLUMNS = [
 
 def image_id_from_cutout(path: Path) -> str:
     stem = path.stem
-    if stem.lower().endswith(LIP_SUFFIX):
-        stem = stem[: -len(LIP_SUFFIX)]
+    if stem.lower().endswith(ROI_SUFFIX):
+        stem = stem[: -len(ROI_SUFFIX)]
     return stem
 
 
 def rgb_to_lab(rgb_pixels):
-    XYZ = colour.sRGB_to_XYZ(np.clip(rgb_pixels, 0, 1))
+    XYZ = colour.sRGB_to_XYZ(np.cROI(rgb_pixels, 0, 1))
     return colour.XYZ_to_Lab(XYZ)
 
 
@@ -66,7 +66,7 @@ def find_cutouts(root: Path):
     if not seg_dir.exists():
         raise FileNotFoundError(
             f"No 'segmented' folder under {root}. Point --root at the same "
-            f"--out folder you gave segment_lips.py."
+            f"--out folder you gave segment_ROIs.py."
         )
     return sorted(p for p in seg_dir.rglob("*")
                   if p.is_file() and p.suffix.lower() in IMG_EXT)
@@ -106,12 +106,12 @@ def threshold_and_measure(bgr):
     return means, mask, "ok"
 
 def save_threshold_qc(bgr, mask, out_path: Path):
-    lip_region = ~np.all(bgr >= 250, axis=-1)  # near-white = background
-    excluded_in_lip = lip_region & ~mask
+    ROI_region = ~np.all(bgr >= 250, axis=-1)  # near-white = background
+    excluded_in_ROI = ROI_region & ~mask
 
     qc = bgr.copy()
     qc[mask] = (0.4 * qc[mask] + np.array([0, 180, 0]) * 0.6).astype(np.uint8)
-    qc[excluded_in_lip] = (0.4 * qc[excluded_in_lip]
+    qc[excluded_in_ROI] = (0.4 * qc[excluded_in_ROI]
                             + np.array([0, 0, 220]) * 0.6).astype(np.uint8)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     cv2.imwrite(str(out_path), qc, [cv2.IMWRITE_JPEG_QUALITY, 90])
@@ -120,7 +120,7 @@ def save_threshold_qc(bgr, mask, out_path: Path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", required=True,
-                    help="the --out folder you gave segment_lips.py "
+                    help="the --out folder you gave segment_ROIs.py "
                          "(must contain a 'segmented' subfolder)")
     ap.add_argument("--output-name", default="Whole_Color_Measurements_pivoted.xlsx",
                     help="Excel filename, written directly under --root")
@@ -129,11 +129,11 @@ def main():
     root = Path(args.root).expanduser().resolve()
     cutouts = find_cutouts(root)
     if not cutouts:
-        print(f"No lip cutouts (*_lip.jpg/.png) found under {root / 'segmented'}")
+        print(f"No ROI cutouts (*_ROI.jpg/.png) found under {root / 'segmented'}")
         return
 
     qc_root = root / "colour_threshold_qc"
-    print(f"Found {len(cutouts)} lip cutout(s) under {root / 'segmented'}\n")
+    print(f"Found {len(cutouts)} ROI cutout(s) under {root / 'segmented'}\n")
 
     rows, log_rows = [], []
     n_ok = n_empty = n_bad = 0
