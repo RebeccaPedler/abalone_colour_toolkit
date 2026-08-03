@@ -142,11 +142,11 @@ A `_metadata.csv` file accompanies each output CSV, describing its columns.
 
 Detects a ColorChecker card in a folder of images and fits a per-channel linear correction (slope, intercept, R²) between detected and reference CIELAB values.
 
-### `02_segment_lips.py`
+### `02_segment_ROI.py`
 
 Uses a YOLO model to segment the ROI, saving a white-background ROI cutout, green-overlay QC image, and a summary CSV of detection status and ROI size per image.
 
-### `03_extract_lip_colour.py`
+### `03_extract_ROI_colour.py`
 
 Applies an HSB colour threshold to segmented ROI cutouts to exclude background and over/under-exposed pixels, then extracts mean RGB, HSB, and CIELAB values over the remaining pixels, along with a QC threshold image and extraction log.
 
