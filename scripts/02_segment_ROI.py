@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-Script 02: Segment out the lip from images of abalone
+Script 02: Segment out the ROI from images
 =================================================================================
-This YOLO model will scan a folder of abalone photos, including searching all
+This YOLO model will scan a folder of photos, including searching all
 subfolders, and for each image save:
   * <name>_lip.png      - the lip on a white background ,
-  * <name>_overlay.jpg  - the original image with the detected lip coloured green for QC ,
-and a summary.csv listing every image, whether a lip was found, and its size.
+  * <name>_overlay.jpg  - the original image with the detected ROI coloured green for QC ,
+and a summary.csv listing every image, whether the ROI was found, and its size.
 
 Handles CR3 raw files (needs `pip install rawpy`) and JPEG/PNG.
 
 Usage:
-    python segment_lips.py --weights "path\to\weights\best.pt" --source "path\to\your\images" --out "path\to\your\output\folder" 
+    python segment_ROI.py --weights "path\to\weights\best.pt" --source "path\to\your\images" --out "path\to\your\output\folder" 
     
 Add this to the run if you wish to pilot on 200 images spread across your subfolders:
         --limit 200
@@ -103,7 +103,7 @@ def main():
     from ultralytics import YOLO
     model = YOLO(weights)
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELROIE, (3, 3))
     rows, found, missed = [], 0, 0
 
     for i, path in enumerate(images, 1):
