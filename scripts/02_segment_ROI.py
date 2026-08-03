@@ -4,7 +4,7 @@ Script 02: Segment out the ROI from images
 =================================================================================
 This YOLO model will scan a folder of photos, including searching all
 subfolders, and for each image save:
-  * <name>_lip.png      - the lip on a white background ,
+  * <name>_ROI.png      - the lip on a white background ,
   * <name>_overlay.jpg  - the original image with the detected ROI coloured green for QC ,
 and a summary.csv listing every image, whether the ROI was found, and its size.
 
@@ -103,7 +103,7 @@ def main():
     from ultralytics import YOLO
     model = YOLO(weights)
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELROIE, (3, 3))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     rows, found, missed = [], 0, 0
 
     for i, path in enumerate(images, 1):
