@@ -1,7 +1,7 @@
 column_name,data_type,description
 image_id,Text,Image file name
-ROI_segmentation_status,Text,"From segment_ROIs.py: 'ok', 'no_ROI_found', or 'unreadable'"
-ROI_pct_of_frame,Decimal,From segment_ROIs.py: percentage of frame occupied by the ROI mask
+ROI_segmentation_status,Text,"From segment_ROI.py: 'ok', 'no_ROI_found', or 'unreadable'"
+ROI_pct_of_frame,Decimal,From segment_ROI.py: percentage of frame occupied by the ROI mask
 correction_status,Text,"From colour_correction_factors.py: 'calibrated', 'no_checker_found', 'fit_failed', or 'load_failed'"
 correction_quality,Text,"From colour_correction_factors.py: 'good', 'acceptable', or 'poor'. Rows marked 'poor' are excluded from corrected L, a, and b columns"
 correction_rotation,Text,Rotation at which the ColorChecker card was detected
