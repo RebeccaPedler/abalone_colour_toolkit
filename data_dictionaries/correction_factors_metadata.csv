@@ -1,7 +1,7 @@
 column_name,data_type,description
 image_id,Text,File name of the image (e.g. IMG_3428.JPG)
 status,Text,"Processing outcome: 'calibrated', 'no_checker_found', 'fit_failed', or 'load_failed'"
-quality,Text,"Calibration quality: 'good' (R2>0.85, dE_after<8), 'acceptable' (R2>0.70, dE_after<10), or 'poor'. Blank if status is not 'calibrated'"
+quality,Text,"Calibration quality: 'good' (R2>0.85, dE_after<6), 'acceptable' (R2>0.70, dE_after<10), or 'poor'. Blank if status is not 'calibrated'"
 rotation,Text,"Image rotation at which the ColorChecker card was detected (0, 90CW, 180, 90CCW)."
 orientation,Text,"Detected grid orientation and flip used for the best fit (e.g. 4x6, 6x4_flipLR)"
 n_patches,Integer,Number of ColorChecker patches used in the correction fit
