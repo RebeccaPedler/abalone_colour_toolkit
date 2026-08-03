@@ -2,7 +2,7 @@
 """
 Script 04: Generate per-image colour correction factors from ColorChecker cards
 =================================================================================
-Joins the outputs of colour_correction_factors.py, segment_ROIs.py and
+Joins the outputs of colour_correction_factors.py, segment_ROI.py and
 extract_ROI_colour.py into one Excel file, one row per image_id, and applies
 the per-image Lab correction factors to the raw ROI colour means.
 
@@ -42,7 +42,7 @@ def stem_from_any_path(p: str) -> str:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--corrections", required=True, help="correction_factors.csv")
-    ap.add_argument("--segmentation", required=True, help="summary.csv from segment_ROIs.py")
+    ap.add_argument("--segmentation", required=True, help="summary.csv from segment_ROI.py")
     ap.add_argument("--colour-data", required=True, help="Whole_Color_Measurements_pivoted.xlsx")
     ap.add_argument("--output", default="collated_colour_data.xlsx")
     args = ap.parse_args()
