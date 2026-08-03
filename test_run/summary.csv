@@ -1,4 +1,4 @@
-image,status,lip_pct_of_frame
+image,status,ROI_pct_of_frame
 IMG_1868.jpg,ok,0.692
 IMG_1879.jpg,ok,0.597
 IMG_1740.jpg,ok,0.542
