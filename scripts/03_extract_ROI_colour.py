@@ -51,7 +51,7 @@ COLOUR_DATA_COLUMNS = [
 
 def image_id_from_cutout(path: Path) -> str:
     stem = path.stem
-    if stem.lower().endswith(ROI_SUFFIX):
+    if stem.lower().endswith(ROI_SUFFIX.lower()):
         stem = stem[: -len(ROI_SUFFIX)]
     return stem
 
