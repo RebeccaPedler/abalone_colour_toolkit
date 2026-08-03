@@ -4,7 +4,7 @@ Script 02: Segment out the ROI from images
 =================================================================================
 This YOLO model will scan a folder of photos, including searching all
 subfolders, and for each image save:
-  * <name>_ROI.png      - the lip on a white background ,
+  * <name>_ROI.png      - the ROI on a white background ,
   * <name>_overlay.jpg  - the original image with the detected ROI coloured green for QC ,
 and a summary.csv listing every image, whether the ROI was found, and its size.
 
@@ -117,7 +117,7 @@ def main():
 
         if res.masks is None or len(res.masks) == 0:
             rows.append([str(path), "no_ROI_found", 0]); missed += 1
-            print(f"[{i}/{len(images)}] {path.name}: no lip found")
+            print(f"[{i}/{len(images)}] {path.name}: no ROI found")
             continue
 
         mask = (res.masks.data.cpu().numpy().max(0) > 0.5).astype(np.uint8) * 255
@@ -146,13 +146,13 @@ def main():
 
         frac = 100 * (mask > 0).mean()
         rows.append([str(path), "ok", round(frac, 3)]); found += 1
-        print(f"[{i}/{len(images)}] {path.name}: lip = {frac:.2f}% of frame")
+        print(f"[{i}/{len(images)}] {path.name}: ROI = {frac:.2f}% of frame")
 
     with open(out / "summary.csv", "w", newline="") as f:
         csv.writer(f).writerows([["image", "status", "ROI_pct_of_frame"]] + rows)
 
-    print(f"\nFound a lip in {found} image(s); {missed} need a look.")
-    print(f"Lip cutouts are under: {out / 'segmented'}")
+    print(f"\nFound a ROI in {found} image(s); {missed} need a look.")
+    print(f"ROI cutouts are under: {out / 'segmented'}")
     print(f"Annotated overlays are under: {out / 'polygons'}")
     print(f"summary.csv is in: {out}")
     print("Skim the overlays in 'polygons' and sort summary.csv by ROI_pct to spot "
