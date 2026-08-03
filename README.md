@@ -6,7 +6,7 @@ A high-throughput pipeline for extracting standardised colour and morphometric m
 
 ## Overview
 
-This repository contains a Python pipeline for calibrating colour from ColorChecker cards, segmenting the abalone lip using a YOLO model, extracting CIELAB colour values from the segmented lip, and collating these outputs into a single dataset. It also includes a morphometrics script for measuring abalone length, width, and area, and a `validation` folder benchmarking each stage of the pipeline  against manual reference measurements. A `test_run` folder provides example outputs from test run of ten images.
+This repository contains a Python pipeline for calibrating colour from ColorChecker cards, segmenting the ROI (in our instance, abalone lip) using a YOLO model, extracting CIELAB colour values from the segmented ROI, and collating these outputs into a single dataset. It also includes a morphometrics script for measuring abalone length, width, and area, and a `validation` folder benchmarking each stage of the pipeline  against manual reference measurements. A `test_run` folder provides example outputs from test run of ten images.
 
 ---
 
@@ -16,18 +16,18 @@ This repository contains a Python pipeline for calibrating colour from ColorChec
 abalone_colour_toolkit/
 ├── scripts/
 │   ├── 01_colour_correction_factors.py   
-│   ├── 02_segment_lips.py                
-│   ├── 03_extract_lip_colour.py          
+│   ├── 02_segment_ROI.py                
+│   ├── 03_extract_ROI_colour.py          
 │   ├── 04_collate_colour_data.py        
-│   └── 05_abalone_morphometrics.py       
+│   └── 05_ROI_morphometrics.py       
 ├── data_dictionaries/                    # Metadata for each csv output
 │   ├── correction_factors_metadata.csv
 │   ├── summary_metadata.csv
-│   ├── Whole_Color_Measurements_metadata.csv
+│   ├── whole_xolor_measurements_metadata.csv
 │   ├── collated_colour_data_metadata.csv
-│   └── abalone_measurements_metadata.csv
+│   └── ROI_measurements_metadata.csv
 ├── segmentation_model_weights/
-│   └── best.pt                           # Trained YOLO weights for lip segmentation
+│   └── best.pt                           # Trained YOLO weights for ROI segmentation
 ├── test_run/                             # Example outputs from a test run of ten images
 │   ├── images/
 │   │   ├── raw_images/                   # 10 .JPG test images
@@ -35,13 +35,13 @@ abalone_colour_toolkit/
 │   │   └── abalone_annotated/            # 10 annotated morphometrics images
 │   ├── correction_factors.csv
 │   ├── Whole_Color_Measurements.csv
-│   ├── abalone_measurements_test.csv
+│   ├── ROI_measurements_test.csv
 │   ├── collated_colour_data.csv
 │   └── summary.csv
 ├── validation/
 │   ├── colour_calibration/               # Validation of 01_colour_correction_factors.py
-│   ├── lip_segmentation/                 # Validation of 02_segment_lips.py 
-│   └── morphometrics/                    # Validation of 05_abalone_morphometrics.py
+│   ├── lip_segmentation/                 # Validation of 02_segment_ROI.py 
+│   └── morphometrics/                    # Validation of 05_ROI_morphometrics.py
 ├── LICENSE.md
 ├── REQUIREMENTS.md
 ├── requirements.txt
@@ -64,11 +64,11 @@ Per-image calibration diagnostics for 1,371 images, including quality category, 
 
 Summary statistics derived from `correction_factors.csv`.
 
-### `validation/lip_segmentation/iou_results.csv`
+### `validation/ROI_segmentation/iou_results.csv`
 
-Per-image IoU, Dice coefficient, and pixel counts for 62 matched pairs of manual and script-generated lip objects.
+Per-image IoU, Dice coefficient, and pixel counts for 62 matched pairs of manual and script-generated ROI.
 
-### `validation/morphometrics/abalone_measurements.csv`
+### `validation/morphometrics/ROI_measurements.csv`
 
 Paired manual and script-derived length measurements for 2,261 images.
 
@@ -92,23 +92,23 @@ python scripts/01_colour_correction_factors.py \
     --output test_run/correction_factors.csv
 ```
 
-**2. Segment the abalone lip with the YOLO model**
+**2. Segment the ROI with the YOLO model**
 
 ```
-python scripts/02_segment_lips.py \
+python scripts/02_segment_ROI.py \
     --weights segmentation_model_weights/best.pt \
     --source test_run/images/raw_images \
-    --out test_run/images/lip_cutouts
+    --out test_run/images/ROI_cutouts
 ```
 
-This writes lip cutouts to `test_run/images/lip_cutouts/segmented/`, QC overlays to `.../polygons/`, and a detection summary CSV (`summary.csv`) to the output folder.
+This writes ROI cutouts to `test_run/images/ROI_cutouts/segmented/`, QC overlays to `.../polygons/`, and a detection summary CSV (`summary.csv`) to the output folder.
 
 **3. Extract CIELAB colour values from the segmented lips**
 
 ```
-python scripts/03_extract_lip_colour.py \
-    --root test_run/images/lip_cutouts/segmented \
-    --output-name Whole_Color_Measurements.xlsx
+python scripts/03_extract_ROI_colour.py \
+    --root test_run/images/ROI_cutouts/segmented \
+    --output-name whole_color_measurements.xlsx
 ```
 
 **4. Collate the correction, segmentation, and colour outputs into one dataset**
@@ -116,18 +116,18 @@ python scripts/03_extract_lip_colour.py \
 ```
 python scripts/04_collate_colour_data.py \
     --corrections test_run/correction_factors.csv \
-    --segmentation test_run/images/lip_cutouts/summary.csv \
-    --colour-data Whole_Color_Measurements.xlsx \
+    --segmentation test_run/images/ROI_cutouts/summary.csv \
+    --colour-data whole_color_measurements.xlsx \
     --output test_run/collated_colour_data.xlsx
 ```
 
 **5. Measure abalone length, width, and area (independent of steps 1–4)**
 
 ```
-python scripts/05_abalone_morphometrics.py \
+python scripts/05_ROI_morphometrics.py \
     --images test_run/images/raw_images \
-    --output test_run/abalone_measurements_test.csv \
-    --vis_dir test_run/images/abalone_annotated
+    --output test_run/ROI_measurements_test.csv \
+    --vis_dir test_run/images/annotated
 ```
 
 Each script also has a usage note and full argument list at the top of its file (run `python scripts/<script>.py --help` for all options).
@@ -144,19 +144,19 @@ Detects a ColorChecker card in a folder of images and fits a per-channel linear 
 
 ### `02_segment_lips.py`
 
-Uses a YOLO model to segment the abalone lip, saving a white-background lip cutout, green-overlay QC image, and a summary CSV of detection status and lip size per image.
+Uses a YOLO model to segment the ROI, saving a white-background ROI cutout, green-overlay QC image, and a summary CSV of detection status and ROI size per image.
 
 ### `03_extract_lip_colour.py`
 
-Applies an HSB colour threshold to segmented lip cutouts to exclude background and over/under-exposed pixels, then extracts mean RGB, HSB, and CIELAB values over the remaining pixels, along with a QC threshold image and extraction log.
+Applies an HSB colour threshold to segmented ROI cutouts to exclude background and over/under-exposed pixels, then extracts mean RGB, HSB, and CIELAB values over the remaining pixels, along with a QC threshold image and extraction log.
 
 ### `04_collate_colour_data.py`
 
-Joins the outputs of the correction, segmentation, and colour extraction scripts into a single dataset keyed by image ID, applying the fitted Lab correction factors to the raw lip colour means.
+Joins the outputs of the correction, segmentation, and colour extraction scripts into a single dataset keyed by image ID, applying the fitted Lab correction factors to the raw colour means.
 
 ### `05_abalone_morphometrics.py`
 
-Batch-measures abalone length, width, and area from images, using the ColorChecker card as a physical scale reference. This script will flag any measurements outside the plausible size range (set by user).
+Batch-measures ROI length, width, and area from images, using the ColorChecker card as a physical scale reference. This script will flag any measurements outside the plausible size range (set by user).
 
 ---
 
@@ -174,11 +174,11 @@ Benchmarked `01_colour_correction_factors.py` against reference ColorChecker Lab
 
 ### Lip segmentation
 
-Compared script-generated lip segmentations against manual Photoshop segmentations across 62 matched image pairs, using IoU and Dice coefficient. See `validation/lip_segmentation/lip_segmentation_validation.md` for full method and results.
+Compared script-generated lip segmentations against manual Photoshop segmentations across 62 matched image pairs, using IoU and Dice coefficient. See `validation/lip_segmentation/ROI_segmentation_validation.md` for full method and results.
 
 ### Morphometrics
 
-Compared `05_abalone_morphometrics.py` length measurements against manual board measurements across 2,261 paired images. See `validation/morphometrics/morphometric_validation.md` for full method and results.
+Compared `05_ROI_morphometrics.py` length measurements against manual board measurements across 2,261 paired images. See `validation/morphometrics/morphometric_validation.md` for full method and results.
 
 ---
 
@@ -197,11 +197,6 @@ Citation details will be added upon submission. Please contact the corresponding
 ## Contact
 
 Rebecca Pedler
-[rebecca.pedler@yumbah.com][rebecca.pedler@flinders.edu.au]
-Yumbah Aquaculture / Flinders University
+[rebecca.pedler@flinders.edu.au]
+Flinders University
 
-## Contact
-
-Rebecca Pedler
-[rebecca.pedler@yumbah.com][rebecca.pedler@flinders.edu.au]
-Yumbah Aquaculture / Flinders University
