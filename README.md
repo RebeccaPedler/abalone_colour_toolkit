@@ -23,7 +23,7 @@ abalone_colour_toolkit/
 ├── data_dictionaries/                    # Metadata for each csv output
 │   ├── correction_factors_metadata.csv
 │   ├── summary_metadata.csv
-│   ├── whole_xolor_measurements_metadata.csv
+│   ├── whole_color_measurements_metadata.csv
 │   ├── collated_colour_data_metadata.csv
 │   └── ROI_measurements_metadata.csv
 ├── segmentation_model_weights/
@@ -34,7 +34,7 @@ abalone_colour_toolkit/
 │   │   ├── lip_cutouts/                  # segmented, polygons, colour_threshold_qc
 │   │   └── abalone_annotated/            # 10 annotated morphometrics images
 │   ├── correction_factors.csv
-│   ├── Whole_Color_Measurements.csv
+│   ├── whole_color_measurements.csv
 │   ├── ROI_measurements_test.csv
 │   ├── collated_colour_data.csv
 │   └── summary.csv
@@ -64,7 +64,7 @@ Per-image calibration diagnostics for 1,371 images, including quality category, 
 
 Summary statistics derived from `correction_factors.csv`.
 
-### `validation/ROI_segmentation/iou_results.csv`
+### `validation/lip_segmentation/iou_results.csv`
 
 Per-image IoU, Dice coefficient, and pixel counts for 62 matched pairs of manual and script-generated ROI.
 
@@ -98,16 +98,16 @@ python scripts/01_colour_correction_factors.py \
 python scripts/02_segment_ROI.py \
     --weights segmentation_model_weights/best.pt \
     --source test_run/images/raw_images \
-    --out test_run/images/ROI_cutouts
+    --out test_run/images/lip_cutouts
 ```
 
-This writes ROI cutouts to `test_run/images/ROI_cutouts/segmented/`, QC overlays to `.../polygons/`, and a detection summary CSV (`summary.csv`) to the output folder.
+This writes ROI cutouts to `test_run/images/lip_cutouts/segmented/`, QC overlays to `.../polygons/`, and a detection summary CSV (`summary.csv`) to the output folder.
 
-**3. Extract CIELAB colour values from the segmented lips**
+**3. Extract CIELAB colour values from the segmented ROI cutouts**
 
 ```
 python scripts/03_extract_ROI_colour.py \
-    --root test_run/images/ROI_cutouts/segmented \
+    --root test_run/images/lip_cutouts/segmented \
     --output-name whole_color_measurements.xlsx
 ```
 
@@ -116,7 +116,7 @@ python scripts/03_extract_ROI_colour.py \
 ```
 python scripts/04_collate_colour_data.py \
     --corrections test_run/correction_factors.csv \
-    --segmentation test_run/images/ROI_cutouts/summary.csv \
+    --segmentation test_run/images/lip_cutouts/summary.csv \
     --colour-data whole_color_measurements.xlsx \
     --output test_run/collated_colour_data.xlsx
 ```
@@ -127,7 +127,7 @@ python scripts/04_collate_colour_data.py \
 python scripts/05_ROI_morphometrics.py \
     --images test_run/images/raw_images \
     --output test_run/ROI_measurements_test.csv \
-    --vis_dir test_run/images/annotated
+    --vis_dir test_run/images/abalone_annotated
 ```
 
 Each script also has a usage note and full argument list at the top of its file (run `python scripts/<script>.py --help` for all options).
@@ -154,7 +154,7 @@ Applies an HSB colour threshold to segmented ROI cutouts to exclude background a
 
 Joins the outputs of the correction, segmentation, and colour extraction scripts into a single dataset keyed by image ID, applying the fitted Lab correction factors to the raw colour means.
 
-### `05_abalone_morphometrics.py`
+### `05_ROI_morphometrics.py`
 
 Batch-measures ROI length, width, and area from images, using the ColorChecker card as a physical scale reference. This script will flag any measurements outside the plausible size range (set by user).
 
@@ -172,9 +172,9 @@ Batch-measures ROI length, width, and area from images, using the ColorChecker c
 
 Benchmarked `01_colour_correction_factors.py` against reference ColorChecker Lab values across 1,371 images. See `validation/colour_calibration/colour_calibration_validation.md` for full method and results.
 
-### Lip segmentation
+### ROI segmentation
 
-Compared script-generated lip segmentations against manual Photoshop segmentations across 62 matched image pairs, using IoU and Dice coefficient. See `validation/lip_segmentation/ROI_segmentation_validation.md` for full method and results.
+Compared script-generated ROI segmentations against manual Photoshop segmentations across 62 matched image pairs, using IoU and Dice coefficient. See `validation/lip_segmentation/lip_segmentation_validation.md` for full method and results.
 
 ### Morphometrics
 
