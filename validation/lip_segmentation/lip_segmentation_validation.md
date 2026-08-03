@@ -3,12 +3,12 @@
 ## Method
 
 n = 62 matched image pairs compared between manual lip segmentations and segmentations
-produced by the Python code (`extract_lip_colour.py`).
+produced by the Python code (`extract_ROI_colour.py`).
 
 - Manual segmentations were produced in Photoshop and exported as RGBA PNGs with a
   transparent background
 - Python segmentations were exported as RGB PNGs with a white background
-- Images were matched by filename, with the Python output identified by the `_lip` suffix
+- Images were matched by filename, with the Python output identified by the `_ROI` suffix
 - Overlap was quantified using Intersection over Union (IoU) and the Dice coefficient,
   calculated from binary masks derived from each image
 
