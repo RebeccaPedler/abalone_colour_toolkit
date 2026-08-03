@@ -34,7 +34,7 @@ import cv2
 
 IMG_EXT = {".jpg", ".jpeg", ".png"}  # for proccessing JPEGS
 RAW_EXT = {".cr3", ".cr2", ".nef", ".arw", ".dng"}  # for proccessing RAW imagery
-SKIP_SUFFIX = ("_lip", "_overlay", "copy")     # this prevents the script from reproccessing generated images
+SKIP_SUFFIX = ("_ROI", "_overlay", "copy")     # this prevents the script from reproccessing generated images
 
 
 def load_image(path: Path):
@@ -116,7 +116,7 @@ def main():
                             retina_masks=True, device=args.device, verbose=False)[0]
 
         if res.masks is None or len(res.masks) == 0:
-            rows.append([str(path), "no_lip_found", 0]); missed += 1
+            rows.append([str(path), "no_ROI_found", 0]); missed += 1
             print(f"[{i}/{len(images)}] {path.name}: no lip found")
             continue
 
@@ -134,7 +134,7 @@ def main():
         copy[mask == 255] = bgr[mask == 255]
         ext = args.format
         params = [cv2.IMWRITE_JPEG_QUALITY, 95] if ext == "jpg" else []
-        cv2.imwrite(str(seg_dir / f"{path.stem}_lip.{ext}"), copy, params)
+        cv2.imwrite(str(seg_dir / f"{path.stem}_ROI.{ext}"), copy, params)
 
         if not args.no_overlays:
             poly_dir = (out / "polygons") if args.flat else (out / "polygons" / rel.parent)
@@ -149,13 +149,13 @@ def main():
         print(f"[{i}/{len(images)}] {path.name}: lip = {frac:.2f}% of frame")
 
     with open(out / "summary.csv", "w", newline="") as f:
-        csv.writer(f).writerows([["image", "status", "lip_pct_of_frame"]] + rows)
+        csv.writer(f).writerows([["image", "status", "ROI_pct_of_frame"]] + rows)
 
     print(f"\nFound a lip in {found} image(s); {missed} need a look.")
     print(f"Lip cutouts are under: {out / 'segmented'}")
     print(f"Annotated overlays are under: {out / 'polygons'}")
     print(f"summary.csv is in: {out}")
-    print("Skim the overlays in 'polygons' and sort summary.csv by lip_pct to spot "
+    print("Skim the overlays in 'polygons' and sort summary.csv by ROI_pct to spot "
           "any misses (0%) or over-grabs (unusually large).")
 
 
