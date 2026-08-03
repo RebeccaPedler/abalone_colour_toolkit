@@ -2,7 +2,7 @@
 """
 Script 03: Generate per-image colour correction factors from ColorChecker cards
 =================================================================================
-Run immediately after segment_ROIs.py. This script takes the white-background ROI cutouts
+Run immediately after segment_ROI.py. This script takes the white-background ROI cutouts
 in <root>/segmented/, applies a HSB colour-threshold to exclude background
 and over/under-exposed pixels, then extracts mean RGB, HSB and CIELAB values
 over the remaining pixels.
@@ -66,7 +66,7 @@ def find_cutouts(root: Path):
     if not seg_dir.exists():
         raise FileNotFoundError(
             f"No 'segmented' folder under {root}. Point --root at the same "
-            f"--out folder you gave segment_ROIs.py."
+            f"--out folder you gave segment_ROI.py."
         )
     return sorted(p for p in seg_dir.rglob("*")
                   if p.is_file() and p.suffix.lower() in IMG_EXT)
@@ -120,7 +120,7 @@ def save_threshold_qc(bgr, mask, out_path: Path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", required=True,
-                    help="the --out folder you gave segment_ROIs.py "
+                    help="the --out folder you gave segment_ROI.py "
                          "(must contain a 'segmented' subfolder)")
     ap.add_argument("--output-name", default="Whole_Color_Measurements_pivoted.xlsx",
                     help="Excel filename, written directly under --root")
