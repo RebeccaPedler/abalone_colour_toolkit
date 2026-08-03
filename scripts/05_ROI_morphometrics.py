@@ -2,10 +2,10 @@
 """
 Script 05: Generate per-image colour correction factors from ColorChecker cards
 =================================================================================
-Batch-measures abalone from images using the ColourChecker as a scale (each patch is 12mm x 12mm)
+Batch-measures ROI from images using the ColourChecker as a scale (each patch is 12mm x 12mm)
 
 Usage:
-python abalone_morphometrics_4.py --images  "path\to\your\images" --output  "path\to\your\images\abalone_measurements.csv" --vis_dir "path\to\your\images\abalone_annotated"
+python ROI_morphometrics_4.py --images  "path\to\your\images" --output  "path\to\your\images\ROI_measurements.csv" --vis_dir "path\to\your\images\ROI_annotated"
 
 Install the required packages if not already:
     pip install opencv-python numpy colour-science colour-checker-detection
@@ -28,7 +28,7 @@ MIN_DIVIDER_FRAC     = 0.01   # divider strip width/height as a fraction of
 MAX_DIVIDER_FRAC     = 0.12   # the image's relevant dimension (generous bounds)
 DIVIDER_DARK_THRESH  = 0.4    # fraction of a row/col that must be "dark" pixels
  
-# Plausible length range for greenlip abalone (mm). Change this according to your population
+# Plausible length range for ROI in mm (e.g. ROI). Change this according to your ROI
 LENGTH_MIN_MM = 60
 LENGTH_MAX_MM = 130
  
@@ -135,17 +135,17 @@ def detect_layout(img_bgr, divider):
         right_count = _quick_patch_count(img_bgr[0:h, mid:w])
  
         if left_count >= right_count:
-            card_box, abalone_box = left_box, right_box
+            card_box, ROI_box = left_box, right_box
         else:
-            card_box, abalone_box = right_box, left_box
-        ax0, ay0, ax1, ay1 = abalone_box
+            card_box, ROI_box = right_box, left_box
+        ax0, ay0, ax1, ay1 = ROI_box
         if ax0 == 0:
             ax1 = max(ax1 - MARGIN, ax0 + 1)
         else:
             ax0 = min(ax0 + MARGIN, ax1 - 1)
-        abalone_box = (ax0, ay0, ax1, ay1)
+        ROI_box = (ax0, ay0, ax1, ay1)
  
-        return {"type": "side_by_side", "card_box": card_box, "abalone_box": abalone_box}
+        return {"type": "side_by_side", "card_box": card_box, "ROI_box": ROI_box}
  
     else:
         below_y0 = min(divider["end"] + MARGIN, h - 1)
@@ -154,10 +154,10 @@ def detect_layout(img_bgr, divider):
         below_region = img_bgr[below_y0:h, 0:w]
         card_box, card_bottom_y = _locate_card_bottom_in_region(below_region, below_y0)
  
-        abalone_y0 = min(card_bottom_y + MARGIN, h - 1)
-        abalone_box = (0, abalone_y0, w, h)
+        ROI_y0 = min(card_bottom_y + MARGIN, h - 1)
+        ROI_box = (0, ROI_y0, w, h)
  
-        return {"type": "stacked", "card_box": card_box, "abalone_box": abalone_box}
+        return {"type": "stacked", "card_box": card_box, "ROI_box": ROI_box}
  
  
 def _locate_card_bottom_in_region(region_bgr, y_offset):
@@ -297,9 +297,9 @@ def pixels_per_mm(img_bgr, card_box,
  
     return px_per_mm, quad_pts
  
-# ABALONE SEGMENTATION
+# ROI SEGMENTATION
  
-def segment_abalone(img_bgr, search_box, near_edge, card_box,
+def segment_ROI(img_bgr, search_box, near_edge, card_box,
                     min_area_px=50_000,
                     debug_dir=None, stem=""):
     h, w = img_bgr.shape[:2]
@@ -380,7 +380,7 @@ def segment_abalone(img_bgr, search_box, near_edge, card_box,
             contour_bbox_area = cntw * cnth
             if contour_bbox_area > 0 and overlap_area / contour_bbox_area > CARD_OVERLAP_THRESH:
                 print(f"    [SKIP] Contour rejected — {overlap_area / contour_bbox_area:.1%} "
-                      f"overlap with card region (likely card patches, not abalone).")
+                      f"overlap with card region (likely card patches, not ROI).")
                 continue
  
         if near_edge == "left":
@@ -414,7 +414,7 @@ def segment_abalone(img_bgr, search_box, near_edge, card_box,
  
 # MEASUREMENT
  
-def measure_abalone(contour, mask, px_mm):
+def measure_ROI(contour, mask, px_mm):
     """Return dict with length_mm, width_mm, area_mm2, rect, box_pts."""
     rect      = cv2.minAreaRect(contour)
     box_w, box_h = rect[1]
@@ -466,7 +466,7 @@ def save_annotated(img_bgr, contour, meas, divider, px_mm, out_path,
         cv2.putText(vis, scale_lbl, (lbl_x, lbl_y),
                     font, fsc * 0.85, (255, 200, 0), thick, cv2.LINE_AA)
  
-    # Abalone contour + bounding box 
+    # ROI contour + bounding box 
     cv2.drawContours(vis, [contour],         -1, (0, 230, 60),  4)
     cv2.drawContours(vis, [meas["box_pts"]], -1, (0, 220, 255), 3)
  
@@ -518,23 +518,23 @@ def process_image(img_path, vis_dir, min_area_px, debug):
         print(f"  [WARN] Scale error ({stem}, layout={layout['type']}): {exc}")
         return None
  
-    ax0, ay0, ax1, ay1 = layout["abalone_box"]
+    ax0, ay0, ax1, ay1 = layout["ROI_box"]
     if layout["type"] == "side_by_side":
         near_edge = "left" if ax0 == 0 else "right"
     else:  # stacked
-        near_edge = "top"  # abalone box always starts below card/divider
+        near_edge = "top"  # ROI box always starts below card/divider
  
-    contour, mask = segment_abalone(img_bgr, layout["abalone_box"], near_edge,
+    contour, mask = segment_ROI(img_bgr, layout["ROI_box"], near_edge,
                                     layout["card_box"],
                                     min_area_px, debug_dir, stem)
     if contour is None:
-        print(f"  [WARN] No abalone found in {stem} (layout={layout['type']})")
+        print(f"  [WARN] No ROI found in {stem} (layout={layout['type']})")
         return None
  
-    meas = measure_abalone(contour, mask, px_mm)
+    meas = measure_ROI(contour, mask, px_mm)
  
     # Plausibility check 
-    # Flag measurements outside the expected size range for greenlip abalone.
+    # Flag measurements outside the expected size range for greenlip ROI.
     length = meas["length_mm"]
     if length < LENGTH_MIN_MM or length > LENGTH_MAX_MM:
         check_flag = (f"CHECK: length {length} mm outside expected range "
@@ -568,7 +568,7 @@ def process_image(img_path, vis_dir, min_area_px, debug):
  
 def main():
     ap = argparse.ArgumentParser(
-        description="Batch abalone morphometrics from lightbox JPEG images.")
+        description="Batch ROI morphometrics from lightbox JPEG images.")
     ap.add_argument("--images",      required=True)
     ap.add_argument("--output",      required=True)
     ap.add_argument("--vis_dir",     default=None)
@@ -622,7 +622,7 @@ def main():
         writer.writerows(results)
  
     print(f"\n{'─'*60}")
-    print(f"Done!  {len(results)}/{len(img_paths)} abalone measured.")
+    print(f"Done!  {len(results)}/{len(img_paths)} ROI measured.")
     flagged = sum(1 for r in results if r["check"])
     if flagged:
         print(f"Flagged for review: {flagged} row(s) — see 'check' column in CSV.")
