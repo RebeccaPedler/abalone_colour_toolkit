@@ -57,7 +57,7 @@ def image_id_from_cutout(path: Path) -> str:
 
 
 def rgb_to_lab(rgb_pixels):
-    XYZ = colour.sRGB_to_XYZ(np.cROI(rgb_pixels, 0, 1))
+    XYZ = colour.sRGB_to_XYZ(np.clip(rgb_pixels, 0, 1))
     return colour.XYZ_to_Lab(XYZ)
 
 
