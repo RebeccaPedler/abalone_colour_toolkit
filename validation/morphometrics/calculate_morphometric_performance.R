@@ -8,7 +8,7 @@ library(patchwork)
 library(here)
 
 # Load and clean data
-dat <- read.csv("abalone_measurements.csv", na.strings = c("", "NA")) |>
+dat <- read.csv("ROI_measurements.csv", na.strings = c("", "NA")) |>
   mutate(
     manual_length_mm = as.numeric(manual_length_mm),
     length_mm = as.numeric(length_mm)
