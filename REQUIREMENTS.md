@@ -9,7 +9,7 @@ opencv-python==4.10.0.84
 numpy==1.26.4
 pandas==2.2.2
 colour-science==0.4.4
-colour-checker-detection==0.7.0
+colour-checker-detection==0.2.3
 openpyxl==3.1.2
 ultralytics==8.2.0
 matplotlib==3.8.4
