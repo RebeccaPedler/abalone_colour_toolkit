@@ -2,12 +2,12 @@
 
 ## Method
 
-n = 2,261 paired measurements compared against `05_abalone_morphometrics.py` script
+n = 2,261 paired measurements compared against `05_ROI_morphometrics.py` script
 measurements on the same images.
 
 - Manual measurements taken using a measuring board with ruler to the nearest whole millimetre
-- Script version validated: `05_abalone_morphometrics.py`
-- Comparison methods: Bland-Altman analysis, paired t-test, linear regression, and
+- Script version validated: `05_ROI_morphometrics.py`
+- Comparison methods: Bland-Altman analysis, linear regression, and
   per-image absolute error with threshold breakdown
 - Length was the only dimension validated; width and area have no manual reference measurements
 - Three images were flagged by the script as outside the plausible size range
@@ -85,6 +85,6 @@ systematically underreport true shell length.
 
 ## Files
 
-- `abalone_measurements.csv` -- paired measurements per image
+- `ROI_measurements.csv` -- paired measurements per image
 - `bland_altman_comparison.png` -- Bland-Altman plots for all data and flagged rows excluded
-- `morphometric_validation_performance.R` -- R script for reproducing all metrics and plots
+- `calculate_morphometric performance.R` -- R script for reproducing all metrics and plots
