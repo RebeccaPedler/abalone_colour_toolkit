@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script 04: Generate per-image colour correction factors from ColorChecker cards
+Script 04: Collate all data into one csv and apply correction factors
 =================================================================================
 Joins the outputs of colour_correction_factors.py, segment_ROI.py and
 extract_ROI_colour.py into one Excel file, one row per image_id, and applies
