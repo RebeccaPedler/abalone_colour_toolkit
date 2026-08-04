@@ -108,7 +108,7 @@ This writes ROI cutouts to `test_run/images/lip_cutouts/segmented/`, QC overlays
 ```
 python scripts/03_extract_ROI_colour.py \
     --root test_run/images/lip_cutouts/segmented \
-    --output-name whole_color_measurements.xlsx
+    --output-name whole_color_measurements.csv
 ```
 
 **4. Collate the correction, segmentation, and colour outputs into one dataset**
@@ -117,8 +117,8 @@ python scripts/03_extract_ROI_colour.py \
 python scripts/04_collate_colour_data.py \
     --corrections test_run/correction_factors.csv \
     --segmentation test_run/images/lip_cutouts/summary.csv \
-    --colour-data whole_color_measurements.xlsx \
-    --output test_run/collated_colour_data.xlsx
+    --colour-data whole_color_measurements.csv \
+    --output test_run/collated_colour_data.csv
 ```
 
 **5. Measure abalone length, width, and area (independent of steps 1–4)**
