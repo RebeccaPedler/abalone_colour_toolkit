@@ -8,10 +8,10 @@ the per-image Lab correction factors to the raw ROI colour means.
 
 Usage:
    python collate_colour_data.py --corrections correction_factors.csv --segmentation summary.csv 
-   --colour-data Whole_Color_Measurements_pivoted.xlsx --output collated_colour_data.xlsx
+   --colour-data whole_color_measurements.csv --output collated_colour_data.csv
 
 Requirements:
-    pip install pandas openpyxl
+    pip install pandas
 """
 
 import argparse
@@ -43,8 +43,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--corrections", required=True, help="correction_factors.csv")
     ap.add_argument("--segmentation", required=True, help="summary.csv from segment_ROI.py")
-    ap.add_argument("--colour-data", required=True, help="Whole_Color_Measurements_pivoted.xlsx")
-    ap.add_argument("--output", default="collated_colour_data.xlsx")
+    ap.add_argument("--colour-data", required=True, help="whole_color_measurements.csv")
+    ap.add_argument("--output", default="collated_colour_data.csv")
     args = ap.parse_args()
 
     corr = pd.read_csv(args.corrections)
@@ -60,7 +60,7 @@ def main():
     seg = seg.rename(columns={"status": "ROI_segmentation_status"})
     seg = seg[["image_id", "ROI_segmentation_status", "ROI_pct_of_frame"]]
 
-    colour = pd.read_excel(args.colour_data, sheet_name="colour_data")
+    colour = pd.read_csv(args.colour_data)
     colour = colour.rename(columns={
         "image_ID":  "image_id",
         "lightness": "uncorrected_L",
@@ -101,7 +101,7 @@ def main():
               f"ROI_segmentation_status and correction_status/correction_quality "
               f"in {args.output} to see why.")
 
-    df.round(3).to_excel(args.output, index=False)
+    df.round(3).to_csv(args.output, index=False)
     print(f"Collated {len(df)} image(s) -> {args.output}")
 
 

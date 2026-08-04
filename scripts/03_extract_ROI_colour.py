@@ -8,11 +8,11 @@ and over/under-exposed pixels, then extracts mean RGB, HSB and CIELAB values
 over the remaining pixels.
 
 Outputs (written under --root):
-  * <root>/Whole_Color_Measurements_pivoted.xlsx
-        Sheet 'colour_data'    - CSV containing image_ID, mean red, green, blue, hue,
-                                  saturation, brightness, lightness, a, b
-        Sheet 'extraction_log' - per-image status (ok / no_pixels_after_threshold
-                                  / unreadable), for QC
+  * <root>/whole_color_measurements.csv
+        image_ID, mean red, green, blue, hue, saturation, brightness,
+        lightness, a, b
+  * <root>/whole_color_measurements_extraction_log.csv
+        per-image status (ok / no_pixels_after_threshold / unreadable), for QC
   * <root>/colour_threshold_qc/<mirrors segmented/ subfolders>/<name>_thresh.jpg
         QC image: green tint = pixels used for the colour means, red tint =
         ROI pixels excluded by the threshold (too bright/dark/grey), white
@@ -22,7 +22,7 @@ Usage:
     python extract_ROI_colour.py --root "path\to\segmented"
 
 Requirements:
-    pip install opencv-python numpy pandas openpyxl matplotlib colour-science
+    pip install opencv-python numpy pandas matplotlib colour-science
 """
 
 import argparse
@@ -122,8 +122,10 @@ def main():
     ap.add_argument("--root", required=True,
                     help="the --out folder you gave segment_ROI.py "
                          "(must contain a 'segmented' subfolder)")
-    ap.add_argument("--output-name", default="Whole_Color_Measurements_pivoted.xlsx",
-                    help="Excel filename, written directly under --root")
+    ap.add_argument("--output-name", default="whole_color_measurements.csv",
+                    help="CSV filename for the colour data, written directly under --root. "
+                         "The extraction log is written alongside it as "
+                         "'<name>_extraction_log.csv'.")
     args = ap.parse_args()
 
     root = Path(args.root).expanduser().resolve()
@@ -168,10 +170,10 @@ def main():
     colour_df = pd.DataFrame(rows, columns=COLOUR_DATA_COLUMNS).round(3)
     log_df = pd.DataFrame(log_rows, columns=["image_ID", "path", "status"])
 
-    out_xlsx = root / args.output_name
-    with pd.ExcelWriter(out_xlsx, engine="openpyxl") as writer:
-        colour_df.to_excel(writer, sheet_name="colour_data", index=False)
-        log_df.to_excel(writer, sheet_name="extraction_log", index=False)
+    out_csv = root / args.output_name
+    log_csv = out_csv.with_name(f"{out_csv.stem}_extraction_log.csv")
+    colour_df.to_csv(out_csv, index=False)
+    log_df.to_csv(log_csv, index=False)
 
     # Print summary
     print(f"\n{'='*50}")
@@ -179,8 +181,9 @@ def main():
     print(f"  ok:                        {n_ok}")
     print(f"  no pixels after threshold: {n_empty}")
     print(f"  unreadable:                {n_bad}")
-    print(f"\nColour data:  {out_xlsx}")
-    print(f"QC overlays:  {qc_root}")
+    print(f"\nColour data:    {out_csv}")
+    print(f"Extraction log: {log_csv}")
+    print(f"QC overlays:    {qc_root}")
 
 
 if __name__ == "__main__":

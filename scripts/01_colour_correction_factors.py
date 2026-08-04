@@ -230,7 +230,7 @@ def main():
     # Print summary
     print(f"\n{'='*50}")
     print(f"DONE — {len(images)} images processed")
-    print(f"  Good        (R²>0.85, dE<6):  {n_good}")
+    print(f"  Good        (R²>0.85, dE<8):  {n_good}")
     print(f"  Acceptable  (R²>0.70):         {n_acceptable}")
     print(f"  Failed:                         {n_failed}")
     print(f"\nCorrection factors saved to: {args.output}")
