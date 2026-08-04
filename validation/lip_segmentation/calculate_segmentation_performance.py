@@ -7,7 +7,7 @@ versions by calculating Intersection over Union (IoU) and dice for each matched 
 Folder structure expected:
     root_dir/
         manual/       PNG files, RGBA, transparent background, no suffix
-        python/       PNG files, RGB, white background, filename ends in _lip
+        python/       PNG files, RGB, white background, filename ends in _ROI
 
 Usage:
 python calculate_iou.py --root "path\to\root" --manual_dir "path\to\manually\segmented\images" --python_dir "path\to\python\segmented\images"
@@ -81,9 +81,9 @@ def main():
         if not d.is_dir():
             sys.exit(f"ERROR: Directory not found: {d}")
  
-    # Build lookup: stem -> path for Python files (strip _lip suffix)
+    # Build lookup: stem -> path for Python files (strip _ suffix)
     python_files = {
-        p.stem.removesuffix("_lip"): p
+        p.stem.removesuffix("_ROI"): p
         for p in sorted(python_dir.glob("*.png"))
     }
  
