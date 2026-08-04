@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script 03: Generate per-image colour correction factors from ColorChecker cards
+Script 03: Extract CIELAB colour data from the ROI
 =================================================================================
 Run immediately after segment_ROI.py. This script takes the white-background ROI cutouts
 in <root>/segmented/, applies a HSB colour-threshold to exclude background
