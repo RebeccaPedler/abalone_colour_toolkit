@@ -1,5 +1,5 @@
 # abalone_morphometrics — model performance assessment
-# Input:  abalone_measurements.csv
+# Input:  ROI_measurements.csv
 
 library(readr)
 library(dplyr)
@@ -8,7 +8,7 @@ library(patchwork)
 library(here)
 
 # Load and clean data
-dat <- read.csv("ROI_measurements.csv", na.strings = c("", "NA")) |>
+dat <- read.csv(here("validation", "morphometrics","ROI_measurements.csv"), na.strings = c("", "NA")) |>
   mutate(
     manual_length_mm = as.numeric(manual_length_mm),
     length_mm = as.numeric(length_mm)
