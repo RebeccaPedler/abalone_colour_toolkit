@@ -1,0 +1,4 @@
+column_name,data_type,description
+image_ID,Text,Image  name (ROI cutout stem with the `_ROI` suffix stripped)
+path,Text,"Path to the ROI cutout that was processed, relative to the `segmented/` folder."
+status,Text,"Processing outcome e.g. 'ok' (colour extracted successfully), 'no_pixels_after_threshold' (every pixel in the ROI was excluded by the HSB threshold), or 'unreadable' (the image file could not be opened)"
