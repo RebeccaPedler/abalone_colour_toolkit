@@ -6,7 +6,7 @@ library(here)
 library(dplyr)
 
 # Load data
-df <- read.csv("correction_factors.csv", stringsAsFactors = FALSE)
+df <- read.csv(here("validation", "colour_calibration", "correction_factors.csv"), stringsAsFactors = FALSE)
 
 # Split into checker-found vs no-checker rows
 found   <- df %>% filter(status == "calibrated")
