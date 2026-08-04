@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script 05: Generate per-image colour correction factors from ColorChecker cards
+Script 05: Measure animal size
 =================================================================================
 Batch-measures ROI from images using the ColourChecker as a scale (each patch is 12mm x 12mm)
 
