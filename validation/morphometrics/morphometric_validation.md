@@ -87,4 +87,4 @@ systematically underreport true shell length.
 
 - `ROI_measurements.csv` -- paired measurements per image
 - `bland_altman_comparison.png` -- Bland-Altman plots for all data and flagged rows excluded
-- `calculate_morphometric performance.R` -- R script for reproducing all metrics and plots
+- `calculate_morphometric_performance.R` -- R script for reproducing all metrics and plots
