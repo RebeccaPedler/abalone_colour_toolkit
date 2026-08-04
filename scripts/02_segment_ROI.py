@@ -17,7 +17,7 @@ Add this to the run if you wish to pilot on 200 images spread across your subfol
         --limit 200
 
 Dependancies:
-   Save the weights folder from this repo (INSERT PATH HERE) into your directory containing images
+   Save the weights folder from this repo into your directory containing images
 
 Install the required packages if not already:
     pip install numpy opencv-python
