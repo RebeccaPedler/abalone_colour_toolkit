@@ -3,7 +3,7 @@
 ## Method
 
 n = 62 matched image pairs compared between manual lip segmentations and segmentations
-produced by the Python code (`extract_ROI_colour.py`).
+produced by the Python code (`02_segment_ROI.py`).
 
 - Manual segmentations were produced in Photoshop and exported as RGBA PNGs with a
   transparent background
