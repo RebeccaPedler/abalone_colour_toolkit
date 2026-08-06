@@ -2,34 +2,18 @@
 """
 Leave-one-out cross-validation for the colour correction fit
 ==============================================================
-Companion script to 01_colour_correction_factors.py.
 
-For each image, the ColorChecker card is detected and the same 4x6/6x4
-orientation search is used to select the best patch grid. The per-channel
-linear correction (L*, a*, b*) is then evaluated two ways:
-
-  in_sample  -- the correction is fit on ALL detected patches and
-                scored on those same patches (this is what dE_after
-                in correction_factors.csv reports).
-
-  loo        -- leave-one-out cross-validation: for each patch in turn,
-                the correction is refit using every OTHER patch, and
-                the held-out patch is then predicted from that fit.
-                This is scored on data the fit never saw, so it is a
-                more honest estimate of how the correction performs
-                on a new colour it was not trained on.
+For each image, the ColorChecker card is detected the linear correction for each CIELAB value.The correction is then evaluated by 
+iteratively refitting a linear correction and leaving one patch out each time. The colour of the held-out patch is then corrected
+and compared to the values provided by the manufacturer (XRITE). This test checks how well the calibration pipeline can correct 
+colour for a patch that the correction model has not been trained on.
 
 Error is reported two ways:
-  - overall dE   : the standard CIE76 Euclidean distance in Lab space,
-                   combining all three channels into one number.
-  - per-channel  : mean absolute error separately for L*, a*, and b*,
-                   so you can see which channel drives the error (e.g.
-                   whether lightness is systematically worse than the
-                   colour channels, as is typical for this correction).
+  - overall dE   : the standard Euclidean distance in CIELAB space.
+  - per-channel  : mean absolute error separately for each channel so that we can see which drives the error (e.g. L, a, or b)
 
 Output: one row per image in a summary CSV (in-sample vs held-out, both
-overall dE and per-channel MAE), plus an optional long-format CSV with
-per-patch results for every channel.
+overall dE and per-channel MAE), plus an optional long-format CSV with per-patch results for every channel.
 
 Usage:
     python loo_colour_validation.py \
@@ -50,8 +34,7 @@ import argparse
 from pathlib import Path
 from numpy.linalg import lstsq
 
-# CONFIGURATION -- kept identical to 01_colour_correction_factors.py so the
-# patch detection and orientation selection match exactly.
+# CONFIGURATION --  identical to 01_colour_correction_factors.py 
 CHECKER_REFERENCE = "ColorChecker24 - After November 2014"
 IMAGE_EXTENSIONS  = [".jpg", ".JPG", ".jpeg", ".JPEG", ".tif", ".TIF"]
 
@@ -268,7 +251,7 @@ def main():
             "orientation": best["orient"],
             "n_patches":   int(mask.sum()),
 
-            # overall CIE76 dE (all three channels combined)
+            # overall dE (all three channels combined)
             "in_sample_dE": round(float(in_dE.mean()), 3),
             "loo_dE":        round(float(loo_dE.mean()), 3),
             "dE_inflation_pct": round(
