@@ -4,7 +4,7 @@ pandas==2.2.2
 colour-science==0.4.4
 colour-checker-detection==0.2.3
 openpyxl==3.1.2
-ultralytics==8.2.0
+ultralytics==8.4.69
 matplotlib==3.8.4
 Pillow==10.3.0
 rawpy==0.27.0
