@@ -48,6 +48,10 @@ metrics <- function(d, label) {
 metrics(dat,       "All data")
 metrics(dat_clean, "Flagged rows excluded")
 
+# Calculate R2
+fit <- lm(detected ~ manual, data = dat)
+print(summary(fit)) 
+
 # Bland-Altman plot function 
 ba_plot <- function(d, title) {
   bias   <- mean(d$diff)

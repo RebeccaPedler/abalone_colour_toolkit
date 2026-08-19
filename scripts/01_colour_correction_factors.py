@@ -187,7 +187,7 @@ def main():
         cand = best["cand"]
 
         # Delta-E before and after (quality check)
-        dE_before = float(np.sqrt(((det_lab - ref_lab)**2).sum(axis=1)).mean())
+        dE_before = float(np.sqrt(((cand - ref_lab)**2).sum(axis=1)).mean())
         corr_lab  = np.column_stack([
             corr["L"]["slope"] * cand[:, 0] + corr["L"]["intercept"],
             corr["a"]["slope"] * cand[:, 1] + corr["a"]["intercept"],

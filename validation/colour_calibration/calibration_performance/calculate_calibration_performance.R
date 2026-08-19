@@ -4,9 +4,11 @@
 
 library(here)
 library(dplyr)
+library(ggplot2)
+library(patchwork)
 
 # Load data
-df <- read.csv(here("validation", "colour_calibration", "correction_factors.csv"), stringsAsFactors = FALSE)
+df <- read.csv(here("validation", "colour_calibration", "calibration_performance", "correction_factors.csv"), stringsAsFactors = FALSE)
 
 # Split into checker-found vs no-checker rows
 found   <- df %>% filter(status == "calibrated")
@@ -80,6 +82,9 @@ write.csv(summary_df, "calibration_summary.csv", row.names = FALSE) # Write CSV
 df_ok <- df[df$status == "calibrated", ]
 cat(sprintf("\nRetained %d of %d images (calibration succeeded)\n", nrow(df_ok), nrow(df)))
 
+# Create quality levels
+quality_levels <- c("poor", "acceptable", "good") 
+
 # Order quality as a factor, worst to best, for consistent plotting order
 df_ok$quality <- factor(df_ok$quality, levels = quality_levels)
 
@@ -137,7 +142,7 @@ combined_plot <- p_before + p_after +
 
 # Save alongside the other correction-factor outputs
 ggsave(
-  filename = here("validation", "colour_calibration", "dE_before_after_by_quality.png"),
+  filename = here("validation", "colour_calibration", "calibration_performance", "dE_before_after_by_quality.png"),
   plot     = combined_plot,
   width    = 10, height = 5, dpi = 300
 )
