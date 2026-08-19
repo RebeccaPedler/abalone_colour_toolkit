@@ -6,7 +6,7 @@ library(here)
 library(dplyr)
 
 # Load data
-df <- read.csv(here("validation", "colour_calibration", "correction_factors.csv"), stringsAsFactors = FALSE)
+df <- read.csv(here("validation", "colour_calibration", "calibration_performance", "correction_factors.csv"), stringsAsFactors = FALSE)
 
 # Split into checker-found vs no-checker rows
 found   <- df %>% filter(status == "calibrated")
@@ -137,7 +137,7 @@ combined_plot <- p_before + p_after +
 
 # Save alongside the other correction-factor outputs
 ggsave(
-  filename = here("validation", "colour_calibration", "dE_before_after_by_quality.png"),
+  filename = here("validation", "colour_calibration", "calibration_performance", "dE_before_after_by_quality.png"),
   plot     = combined_plot,
   width    = 10, height = 5, dpi = 300
 )
