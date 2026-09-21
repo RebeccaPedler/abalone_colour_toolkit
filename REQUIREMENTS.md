@@ -6,9 +6,9 @@ Tested with Python 3.10.
 
 ```
 opencv-python==4.10.0.84
-numpy==1.26.4
+numpy==2.0.0,<3
 pandas==2.2.2
-colour-science==0.4.4
+colour-science==0.4.5
 colour-checker-detection==0.2.3
 openpyxl==3.1.2
 ultralytics==8.4.69
