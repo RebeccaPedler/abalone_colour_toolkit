@@ -17,7 +17,6 @@ import csv
 import glob
 import os
 import sys
-import warnings
 from pathlib import Path
  
 import cv2
