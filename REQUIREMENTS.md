@@ -14,6 +14,7 @@ openpyxl==3.1.2
 ultralytics==8.4.69
 matplotlib==3.8.4
 Pillow==10.3.0
+rawpy==0.27.0
 ```
 
 Copy the package list above into a `requirements.txt` file, then install with:
