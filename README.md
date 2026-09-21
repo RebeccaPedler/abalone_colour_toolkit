@@ -206,7 +206,7 @@ This repository is released under the MIT License. See `LICENSE.md` for the full
 
 ## Citation
 
-Citation details will be added upon submission. Please contact the corresponding author to use this repository in the meantime.
+Pedler, R. (2026). abalone_colour_toolkit (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.22884679
 
 ---
 
