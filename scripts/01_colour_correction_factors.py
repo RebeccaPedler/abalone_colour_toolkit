@@ -150,7 +150,7 @@ def main():
     ref_lab = build_reference_lab()
     rows    = []
 
-    n_good = 0; n_acceptable = 0; n_failed = 0
+    n_good = 0; n_acceptable = 0; n_poor = 0; n_failed = 0
 
     for i, img_path in enumerate(images):
         if i % 50 == 0 and i > 0:
@@ -219,9 +219,9 @@ def main():
             "dE_after":    round(dE_after,  3),
         })
 
-        if quality == "good":             n_good       += 1
-        elif quality == "acceptable":     n_acceptable += 1
-        else:                             n_failed     += 1
+    if quality == "good":             n_good       += 1
+    elif quality == "acceptable":     n_acceptable += 1
+    else:                             n_poor       += 1
 
     # Save report
     df = pd.DataFrame(rows)
@@ -232,6 +232,7 @@ def main():
     print(f"DONE — {len(images)} images processed")
     print(f"  Good        (R²>0.85, dE<6):  {n_good}")
     print(f"  Acceptable  (R²>0.70):         {n_acceptable}")
+    print(f"  Poor (calibrated, low quality): {n_poor}")
     print(f"  Failed:                         {n_failed}")
     print(f"\nCorrection factors saved to: {args.output}")
     print(f"\nTo apply in R:")
