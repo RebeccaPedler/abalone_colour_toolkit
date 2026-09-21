@@ -130,7 +130,7 @@ python scripts/03_extract_ROI_colour.py \
 ```
 python scripts/04_collate_colour_data.py \
     --corrections test_run/correction_factors.csv \
-    --segmentation test_run/images/lip_cutouts/summary.csv \
+    --segmentation test_run/images/test_run/summary.csv \
     --colour-data test_run/images/lip_cutouts/whole_color_measurements.csv \
     --output test_run/collated_colour_data.csv
 ```
