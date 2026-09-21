@@ -219,9 +219,9 @@ def main():
             "dE_after":    round(dE_after,  3),
         })
 
-    if quality == "good":             n_good       += 1
-    elif quality == "acceptable":     n_acceptable += 1
-    else:                             n_poor       += 1
+        if quality == "good":             n_good       += 1
+        elif quality == "acceptable":     n_acceptable += 1
+        else:                             n_poor       += 1
 
     # Save report
     df = pd.DataFrame(rows)
